@@ -50,6 +50,18 @@ static const struct qcom_wdt_match_data match_data_kpss = {
 	.offset = reg_offset_data_kpss,
 };
 
+static const u32 reg_offset_data_apcs_tmr[] = {
+	[WDT_RST] = 0x38,
+	[WDT_EN] = 0x40,
+	[WDT_STS] = 0x44,
+	[WDT_BARK_TIME] = 0x4c,
+	[WDT_BITE_TIME] = 0x5c,
+};
+
+static const struct qcom_wdt_match_data match_data_apcs_tmr = {
+	.offset = reg_offset_data_apcs_tmr,
+};
+
 static void __iomem *wdt_addr(struct qcom_wdt *wdt, enum wdt_reg reg)
 {
 	return wdt->base + wdt->layout[reg];
@@ -139,6 +151,7 @@ static const struct wdt_ops qcom_wdt_ops = {
 };
 
 static const struct udevice_id qcom_wdt_ids[] = {
+	{ .compatible = "qcom,apss-wdt-qcs404", .data = (ulong)&match_data_apcs_tmr },
 	{ .compatible = "qcom,kpss-wdt", .data = (ulong)&match_data_kpss },
 	{}
 };

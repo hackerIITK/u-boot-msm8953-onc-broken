@@ -389,10 +389,25 @@ void qcom_pmic_watchdog_disable(void)
 void qcom_watchdog_pet(void)
 {
 	struct arm_smccc_res _res;
+
+	/* 1. APCS TMR Layout (msm8937 / msm8953 / qcs404):
+	 * WDT_RST (0x38) = 1 (reload countdown counter)
+	 * WDT_EN  (0x40) = 0 (keep disabled)
+	 */
+	arm_smccc_smc(0x82000502, 2, 0x0b017038, 1, 0, 0, 0, 0, &_res);
+	arm_smccc_smc(0x82000502, 2, 0x0b017040, 0, 0, 0, 0, 0, &_res);
+	*(volatile uint32_t *)0x0b017038ULL = 1;
+	*(volatile uint32_t *)0x0b017040ULL = 0;
+
+	/* 2. Legacy KPSS Layout (msm8974 / apq8064 fallback):
+	 * WDT_RST (0x04) = 1
+	 * WDT_EN  (0x08) = 0
+	 */
 	arm_smccc_smc(0x82000502, 2, 0x0b017004, 1, 0, 0, 0, 0, &_res);
 	arm_smccc_smc(0x82000502, 2, 0x0b017008, 0, 0, 0, 0, 0, &_res);
 	*(volatile uint32_t *)0x0b017004ULL = 1;
 	*(volatile uint32_t *)0x0b017008ULL = 0;
+
 	asm volatile("dsb sy" ::: "memory");
 }
 
@@ -487,7 +502,23 @@ static void qcom_disable_watchdog(void)
 	/* 1. TrustZone SCM WDOG_DEBUG_DISABLE */
 	qcom_scm_disable_wdog_debug();
 
-	/* 2. TrustZone SCM writes to APCS watchdog:
+	/* 2. APCS TMR Watchdog (msm8937 / msm8953 / qcs404):
+	 * WDT_RST       = 0x38 (write 1 to reload)
+	 * WDT_EN        = 0x40 (write 0 to disable)
+	 * WDT_BARK_TIME = 0x4C (program maximum timeout)
+	 * WDT_BITE_TIME = 0x5C (program maximum timeout)
+	 */
+	qcom_scm_io_write(0x0b017040, 0);
+	qcom_scm_io_write(0x0b017038, 1);
+	qcom_scm_io_write(0x0b01704c, 0x000FFFFF);
+	qcom_scm_io_write(0x0b01705c, 0x000FFFFF);
+
+	*(volatile uint32_t *)0x0b01704cULL = 0x000FFFFF;
+	*(volatile uint32_t *)0x0b01705cULL = 0x000FFFFF;
+	*(volatile uint32_t *)0x0b017038ULL = 1;
+	*(volatile uint32_t *)0x0b017040ULL = 0;
+
+	/* 3. Legacy KPSS Watchdog Fallback:
 	 * Disable WDT_EN (0x08 = 0)
 	 * Reset counter WDT_RST (0x04 = 1)
 	 */
@@ -496,13 +527,9 @@ static void qcom_disable_watchdog(void)
 	qcom_scm_io_write(0x0b017010, 0x000FFFFF);
 	qcom_scm_io_write(0x0b017014, 0x000FFFFF);
 
-	/* 3. Direct MMIO backup */
 	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
 	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
 	*(volatile uint32_t *)0x0b017004ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 1;
-	asm volatile("dsb sy" ::: "memory");
-	*(volatile uint32_t *)0x0b017004ULL = 0;
 	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
 
@@ -533,7 +560,18 @@ static void log_boot_timestamp(void)
 		 "[BUILD] U-Boot compiled on " U_BOOT_DATE " at " U_BOOT_TIME " UTC\n");
 	qcom_ramoops_early_log(buf);
 
-	/* Read hardware APCS watchdog registers BEFORE */
+	/* Read hardware APCS TMR watchdog registers BEFORE */
+	uint32_t b_tmr_rst  = *(volatile uint32_t *)0x0b017038ULL;
+	uint32_t b_tmr_en   = *(volatile uint32_t *)0x0b017040ULL;
+	uint32_t b_tmr_sts  = *(volatile uint32_t *)0x0b017044ULL;
+	uint32_t b_tmr_bark = *(volatile uint32_t *)0x0b01704cULL;
+	uint32_t b_tmr_bite = *(volatile uint32_t *)0x0b01705cULL;
+
+	uint32_t scm_b_tmr_en   = qcom_scm_io_read(0x0b017040);
+	uint32_t scm_b_tmr_sts  = qcom_scm_io_read(0x0b017044);
+	uint32_t scm_b_tmr_bite = qcom_scm_io_read(0x0b01705c);
+
+	/* Read legacy KPSS watchdog registers BEFORE */
 	uint32_t b_ctl  = *(volatile uint32_t *)0x0b017004ULL;
 	uint32_t b_rst  = *(volatile uint32_t *)0x0b017008ULL;
 	uint32_t b_sts  = *(volatile uint32_t *)0x0b01700cULL;
@@ -542,34 +580,44 @@ static void log_boot_timestamp(void)
 
 	/* Reprogram & pet via SCM and MMIO */
 	int sdi_ret = qcom_scm_disable_wdog_debug();
-	int w_en_ret = qcom_scm_io_write(0x0b017008, 0);
-	int w_rst_ret = qcom_scm_io_write(0x0b017004, 1);
 	qcom_disable_watchdog();
 
-	/* Read hardware APCS watchdog registers AFTER */
+	/* Read hardware APCS TMR watchdog registers AFTER */
+	uint32_t a_tmr_rst  = *(volatile uint32_t *)0x0b017038ULL;
+	uint32_t a_tmr_en   = *(volatile uint32_t *)0x0b017040ULL;
+	uint32_t a_tmr_sts  = *(volatile uint32_t *)0x0b017044ULL;
+	uint32_t a_tmr_bark = *(volatile uint32_t *)0x0b01704cULL;
+	uint32_t a_tmr_bite = *(volatile uint32_t *)0x0b01705cULL;
+
+	uint32_t scm_a_tmr_en   = qcom_scm_io_read(0x0b017040);
+	uint32_t scm_a_tmr_sts  = qcom_scm_io_read(0x0b017044);
+	uint32_t scm_a_tmr_bite = qcom_scm_io_read(0x0b01705c);
+
+	/* Read legacy KPSS watchdog registers AFTER */
 	uint32_t a_ctl  = *(volatile uint32_t *)0x0b017004ULL;
 	uint32_t a_rst  = *(volatile uint32_t *)0x0b017008ULL;
 	uint32_t a_sts  = *(volatile uint32_t *)0x0b01700cULL;
 	uint32_t a_bark = *(volatile uint32_t *)0x0b017010ULL;
 	uint32_t a_bite = *(volatile uint32_t *)0x0b017014ULL;
 
-	uint32_t scm_en = qcom_scm_io_read(0x0b017008);
-	uint32_t scm_rst = qcom_scm_io_read(0x0b017004);
-	uint32_t scm_sts = qcom_scm_io_read(0x0b01700c);
+	snprintf(buf, sizeof(buf),
+		 "[APCS TMR BEFORE] MMIO: RST(0x38)=0x%08x EN(0x40)=0x%08x STS(0x44)=0x%08x BARK=0x%08x BITE=0x%08x | SCM: EN=0x%08x STS=0x%08x BITE=0x%08x\n",
+		 b_tmr_rst, b_tmr_en, b_tmr_sts, b_tmr_bark, b_tmr_bite, scm_b_tmr_en, scm_b_tmr_sts, scm_b_tmr_bite);
+	qcom_ramoops_early_log(buf);
 
 	snprintf(buf, sizeof(buf),
-		 "[WDT BEFORE] CTL(0x04)=0x%08x RST(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
+		 "[APCS TMR AFTER]  MMIO: RST(0x38)=0x%08x EN(0x40)=0x%08x STS(0x44)=0x%08x BARK=0x%08x BITE=0x%08x | SCM: EN=0x%08x STS=0x%08x BITE=0x%08x (SDI_RET=%d)\n",
+		 a_tmr_rst, a_tmr_en, a_tmr_sts, a_tmr_bark, a_tmr_bite, scm_a_tmr_en, scm_a_tmr_sts, scm_a_tmr_bite, sdi_ret);
+	qcom_ramoops_early_log(buf);
+
+	snprintf(buf, sizeof(buf),
+		 "[KPSS BEFORE]     MMIO: CTL(0x04)=0x%08x RST(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
 		 b_ctl, b_rst, b_sts, b_bark, b_bite);
 	qcom_ramoops_early_log(buf);
 
 	snprintf(buf, sizeof(buf),
-		 "[WDT AFTER]  CTL(0x04)=0x%08x RST(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
+		 "[KPSS AFTER]      MMIO: CTL(0x04)=0x%08x RST(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
 		 a_ctl, a_rst, a_sts, a_bark, a_bite);
-	qcom_ramoops_early_log(buf);
-
-	snprintf(buf, sizeof(buf),
-		 "[WDT SCM] SDI_RET=%d W_EN_RET=%d W_RST_RET=%d | SCM_EN=0x%08x SCM_RST=0x%08x STS=0x%08x\n",
-		 sdi_ret, w_en_ret, w_rst_ret, scm_en, scm_rst, scm_sts);
 	qcom_ramoops_early_log(buf);
 }
 
@@ -612,7 +660,7 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v32) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v33) ===\n[0] In board_fdt_blob_setup\n");
 	log_boot_timestamp();
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
 	qcom_ramoops_early_log("[CKPT 0] Splash painted OK\n");
