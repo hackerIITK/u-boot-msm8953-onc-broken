@@ -108,15 +108,9 @@ static void cyclic_run(void)
 
 void schedule(void)
 {
-	/* Reprogram BARK & BITE, Pet on both 0x04 and 0x08, then clear both to 0 */
-	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
-	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
-	*(volatile uint32_t *)0x0b017004ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 1;
-	asm volatile("dsb sy" ::: "memory");
-	*(volatile uint32_t *)0x0b017004ULL = 0;
-	*(volatile uint32_t *)0x0b017008ULL = 0;
-	asm volatile("dsb sy" ::: "memory");
+	/* Pet watchdog via TrustZone SCM and direct MMIO */
+	extern void qcom_watchdog_pet(void);
+	qcom_watchdog_pet();
 
 	/* The HW watchdog is not integrated into the cyclic IF (yet) */
 	if (IS_ENABLED(CONFIG_HW_WATCHDOG))

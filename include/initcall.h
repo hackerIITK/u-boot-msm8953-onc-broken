@@ -35,17 +35,9 @@ _Static_assert(EVT_COUNT < 256, "Can only support 256 event types with 8 bits");
 #define WATCHDOG_INIT() INITCALL(init_func_watchdog_init)
 #define WATCHDOG_RESET() INITCALL(init_func_watchdog_reset)
 #else
+extern void qcom_watchdog_pet(void);
 #define WATCHDOG_INIT()
-#define WATCHDOG_RESET() do { \
-		*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF; \
-		*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF; \
-		*(volatile uint32_t *)0x0b017004ULL = 1; \
-		*(volatile uint32_t *)0x0b017008ULL = 1; \
-		asm volatile("dsb sy" ::: "memory"); \
-		*(volatile uint32_t *)0x0b017004ULL = 0; \
-		*(volatile uint32_t *)0x0b017008ULL = 0; \
-		asm volatile("dsb sy" ::: "memory"); \
-	} while (0)
+#define WATCHDOG_RESET() qcom_watchdog_pet()
 #endif
 
 #endif

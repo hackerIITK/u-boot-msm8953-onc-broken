@@ -270,17 +270,19 @@ static inline void append_ts_str(volatile char *data, volatile char *raw, uint32
  * or for supporting quirky devices where it's easier to leave the downstream DT in place
  * to improve ABL compatibility. Otherwise, we use the DT provided by ABL.
  */
-void qcom_ramoops_early_log(const char *msg)
+void qcom_watchdog_pet(void)
 {
-	/* Reprogram BARK & BITE, Pet watchdog on both 0x04 and 0x08, then clear both to 0 */
-	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
-	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
+	struct arm_smccc_res _res;
+	arm_smccc_smc(0x82000502, 2, 0x0b017004, 1, 0, 0, 0, 0, &_res);
+	arm_smccc_smc(0x82000502, 2, 0x0b017008, 0, 0, 0, 0, 0, &_res);
 	*(volatile uint32_t *)0x0b017004ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 1;
-	asm volatile("dsb sy" ::: "memory");
-	*(volatile uint32_t *)0x0b017004ULL = 0;
 	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
+}
+
+void qcom_ramoops_early_log(const char *msg)
+{
+	qcom_watchdog_pet();
 
 	volatile uint32_t *pram = (volatile uint32_t *)0xBFEC0000ULL;
 	volatile char *raw = (volatile char *)0xBFE80000ULL;
@@ -324,6 +326,30 @@ void qcom_ramoops_early_log(const char *msg)
 	raw[offt] = '\0';
 }
 
+static inline int qcom_scm_io_write(uint32_t address, uint32_t val)
+{
+	struct arm_smccc_res res;
+	/* SCM_SVC_IO (0x05) | SCM_IO_WRITE (0x02) -> 0x82000502, arginfo=2 */
+	arm_smccc_smc(0x82000502, 2, address, val, 0, 0, 0, 0, &res);
+	return (int)res.a0;
+}
+
+static inline uint32_t qcom_scm_io_read(uint32_t address)
+{
+	struct arm_smccc_res res;
+	/* SCM_SVC_IO (0x05) | SCM_IO_READ (0x01) -> 0x82000501, arginfo=1 */
+	arm_smccc_smc(0x82000501, 1, address, 0, 0, 0, 0, 0, &res);
+	return (res.a0 == 0) ? (uint32_t)res.a1 : 0xFFFFFFFF;
+}
+
+static inline int qcom_scm_disable_wdog_debug(void)
+{
+	struct arm_smccc_res res;
+	/* SCM_SVC_BOOT (0x01) | WDOG_DEBUG_DISABLE (0x09) -> 0x82000109, arginfo=2 */
+	arm_smccc_smc(0x82000109, 2, 1, 0, 0, 0, 0, 0, &res);
+	return (int)res.a0;
+}
+
 void early_delay_s(uint32_t sec)
 {
 	uint64_t frq, start, target;
@@ -333,15 +359,7 @@ void early_delay_s(uint32_t sec)
 	target = start + (frq * sec);
 	while (1) {
 		uint64_t cur;
-		/* Reprogram BARK & BITE, Pet watchdog on both 0x04 and 0x08, then clear both to 0 */
-		*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
-		*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
-		*(volatile uint32_t *)0x0b017004ULL = 1;
-		*(volatile uint32_t *)0x0b017008ULL = 1;
-		asm volatile("dsb sy" ::: "memory");
-		*(volatile uint32_t *)0x0b017004ULL = 0;
-		*(volatile uint32_t *)0x0b017008ULL = 0;
-		asm volatile("dsb sy" ::: "memory");
+		qcom_watchdog_pet();
 		asm volatile("mrs %0, cntpct_el0" : "=r" (cur));
 		if (cur >= target)
 			break;
@@ -350,14 +368,24 @@ void early_delay_s(uint32_t sec)
 
 static void qcom_disable_watchdog(void)
 {
-	/* Reprogram BARK & BITE to max */
+	/* 1. TrustZone SCM WDOG_DEBUG_DISABLE */
+	qcom_scm_disable_wdog_debug();
+
+	/* 2. TrustZone SCM writes to APCS watchdog:
+	 * Disable WDT_EN (0x08 = 0)
+	 * Reset counter WDT_RST (0x04 = 1)
+	 */
+	qcom_scm_io_write(0x0b017008, 0);
+	qcom_scm_io_write(0x0b017004, 1);
+	qcom_scm_io_write(0x0b017010, 0x000FFFFF);
+	qcom_scm_io_write(0x0b017014, 0x000FFFFF);
+
+	/* 3. Direct MMIO backup */
 	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
 	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
-	/* Pet on both potential reset registers (0x04 / 0x08) */
 	*(volatile uint32_t *)0x0b017004ULL = 1;
 	*(volatile uint32_t *)0x0b017008ULL = 1;
 	asm volatile("dsb sy" ::: "memory");
-	/* Clear enable bit on both potential control registers (0x04 / 0x08) */
 	*(volatile uint32_t *)0x0b017004ULL = 0;
 	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
@@ -393,7 +421,10 @@ static void log_boot_timestamp(void)
 	uint32_t b_bark = *(volatile uint32_t *)0x0b017010ULL;
 	uint32_t b_bite = *(volatile uint32_t *)0x0b017014ULL;
 
-	/* Reprogram & pet */
+	/* Reprogram & pet via SCM and MMIO */
+	int sdi_ret = qcom_scm_disable_wdog_debug();
+	int w_en_ret = qcom_scm_io_write(0x0b017008, 0);
+	int w_rst_ret = qcom_scm_io_write(0x0b017004, 1);
 	qcom_disable_watchdog();
 
 	/* Read hardware APCS watchdog registers AFTER */
@@ -403,6 +434,10 @@ static void log_boot_timestamp(void)
 	uint32_t a_bark = *(volatile uint32_t *)0x0b017010ULL;
 	uint32_t a_bite = *(volatile uint32_t *)0x0b017014ULL;
 
+	uint32_t scm_en = qcom_scm_io_read(0x0b017008);
+	uint32_t scm_rst = qcom_scm_io_read(0x0b017004);
+	uint32_t scm_sts = qcom_scm_io_read(0x0b01700c);
+
 	snprintf(buf, sizeof(buf),
 		 "[WDT BEFORE] CTL(0x04)=0x%08x RST(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
 		 b_ctl, b_rst, b_sts, b_bark, b_bite);
@@ -411,6 +446,11 @@ static void log_boot_timestamp(void)
 	snprintf(buf, sizeof(buf),
 		 "[WDT AFTER]  CTL(0x04)=0x%08x RST(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
 		 a_ctl, a_rst, a_sts, a_bark, a_bite);
+	qcom_ramoops_early_log(buf);
+
+	snprintf(buf, sizeof(buf),
+		 "[WDT SCM] SDI_RET=%d W_EN_RET=%d W_RST_RET=%d | SCM_EN=0x%08x SCM_RST=0x%08x STS=0x%08x\n",
+		 sdi_ret, w_en_ret, w_rst_ret, scm_en, scm_rst, scm_sts);
 	qcom_ramoops_early_log(buf);
 }
 
@@ -453,7 +493,7 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v29) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v30) ===\n[0] In board_fdt_blob_setup\n");
 	log_boot_timestamp();
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
 	qcom_ramoops_early_log("[CKPT 0] Splash painted OK\n");

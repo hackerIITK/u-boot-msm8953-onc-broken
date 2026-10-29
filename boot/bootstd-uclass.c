@@ -178,6 +178,7 @@ int dm_scan_other(bool pre_reloc_only)
 	const int n_ents = ll_entry_count(struct driver, driver);
 	struct udevice *dev, *bootstd;
 	int i, ret;
+	extern void qcom_ramoops_early_log(const char *msg);
 
 	/* These are not needed before relocation */
 	if (!(gd->flags & GD_FLG_RELOC))
@@ -198,7 +199,6 @@ int dm_scan_other(bool pre_reloc_only)
 		return 0;
 
 	for (i = 0; i < n_ents; i++, drv++) {
-		schedule();
 		if (drv->id == UCLASS_BOOTMETH) {
 			const char *name = drv->name;
 
