@@ -233,6 +233,10 @@ static void qcom_psci_fixup(void *fdt)
  */
 void qcom_ramoops_early_log(const char *msg)
 {
+	/* Refresh APCS hardware watchdog on every log entry */
+	*(volatile uint32_t *)0x0b017004ULL = 1;
+	asm volatile("dsb sy" ::: "memory");
+
 	volatile uint32_t *pram = (volatile uint32_t *)0xBFEC0000ULL;
 	volatile char *raw = (volatile char *)0xBFE80000ULL;
 	volatile char *data = (volatile char *)0xBFEC000CULL;
@@ -275,6 +279,7 @@ void early_delay_s(uint32_t sec)
 		uint64_t cur;
 		/* Pet APCS watchdog during delay */
 		*(volatile uint32_t *)0x0b017004ULL = 1;
+		asm volatile("dsb sy" ::: "memory");
 		asm volatile("mrs %0, cntpct_el0" : "=r" (cur));
 		if (cur >= target)
 			break;
@@ -283,16 +288,9 @@ void early_delay_s(uint32_t sec)
 
 static void qcom_disable_watchdog(void)
 {
-	volatile uint32_t *wdt_rst  = (volatile uint32_t *)0x0b017004ULL;
-	volatile uint32_t *wdt_en   = (volatile uint32_t *)0x0b017008ULL;
-	volatile uint32_t *wdt_bark = (volatile uint32_t *)0x0b017010ULL;
-	volatile uint32_t *wdt_bite = (volatile uint32_t *)0x0b017014ULL;
-
-	*wdt_rst = 1;          /* Pet */
-	*wdt_en = 0;           /* Disable enable bit */
-	*wdt_bark = 0x7FFFFFFF;/* Max bark timeout */
-	*wdt_bite = 0x7FFFFFFF;/* Max bite timeout */
-	*wdt_rst = 1;          /* Pet again */
+	/* Pet APCS watchdog (0x0B017004 is WDT0_RST) */
+	*(volatile uint32_t *)0x0b017004ULL = 1;
+	asm volatile("dsb sy" ::: "memory");
 }
 
 static void draw_early_splash(void)
@@ -334,11 +332,8 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v16) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v17) ===\n[0] In board_fdt_blob_setup\n");
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
-	qcom_ramoops_early_log("[MAJOR 0] Sleeping 5s to hold splash on screen...\n");
-	early_delay_s(5);
-	qcom_ramoops_early_log("[MAJOR 0] Survived 5s early splash delay!\n");
 
 	internal_fdt = (struct fdt_header *)*fdtp;
 	external_fdt = (struct fdt_header *)get_prev_bl_fdt_addr();
@@ -715,8 +710,10 @@ int board_late_init(void)
 	qcom_late_init();
 
 	qcom_show_boot_source();
-	/* Configure the dfu_string for capsule updates */
-	qcom_configure_capsule_updates();
+	/* Configure the dfu_string for capsule updates (skip on msm8953) */
+	if (fdt_node_check_compatible(gd->fdt_blob, 0, "qcom,msm8953") != 0 &&
+	    fdt_node_check_compatible(gd->fdt_blob, 0, "qcom,sdm632") != 0)
+		qcom_configure_capsule_updates();
 
 	return 0;
 }
@@ -937,7 +934,4 @@ void enable_caches(void)
 	set_sctlr(get_sctlr() | CR_C);
 
 	qcom_ramoops_early_log("[2.6] MMU and dcache enabled successfully!\n");
-	qcom_ramoops_early_log("[SUB 1] Sleeping 3s after MMU & dcache ON...\n");
-	early_delay_s(3);
-	qcom_ramoops_early_log("[SUB 1] Survived 3s post-MMU sleep!\n");
 }

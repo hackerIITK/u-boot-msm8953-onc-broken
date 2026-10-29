@@ -108,6 +108,10 @@ static void cyclic_run(void)
 
 void schedule(void)
 {
+	/* Pet APCS watchdog on Qualcomm platforms */
+	*(volatile uint32_t *)0x0b017004ULL = 1;
+	asm volatile("dsb sy" ::: "memory");
+
 	/* The HW watchdog is not integrated into the cyclic IF (yet) */
 	if (IS_ENABLED(CONFIG_HW_WATCHDOG))
 		hw_watchdog_reset();

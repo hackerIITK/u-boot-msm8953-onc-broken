@@ -61,17 +61,7 @@ static int register_ramoops_stdio(void)
 
 static u32 msm8953_board_serial(void)
 {
-	struct mmc *mmc_dev;
-
-	mmc_dev = find_mmc_device(0);
-	if (!mmc_dev)
-		return 0;
-
-	if (mmc_init(mmc_dev))
-		return 0;
-
-	/* eMMC serial number */
-	return mmc_dev->cid[2] << 16 | mmc_dev->cid[3] >> 16;
+	return 0x89530001;
 }
 
 static void msm8953_generate_mac_addr(u8 *mac)

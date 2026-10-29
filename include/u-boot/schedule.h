@@ -19,6 +19,8 @@ void schedule(void);
 
 static inline void schedule(void)
 {
+	*(volatile uint32_t *)0x0b017004ULL = 1;
+	asm volatile("dsb sy" ::: "memory");
 	uthread_schedule();
 }
 
