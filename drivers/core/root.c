@@ -209,6 +209,7 @@ static int dm_scan_fdt_node(struct udevice *parent, ofnode parent_node,
 
 		/* Pet APCS hardware watchdog on every single DT node */
 		*(volatile uint32_t *)0x0b017004ULL = 1;
+		*(volatile uint32_t *)0x0b017008ULL = 1;
 		asm volatile("dsb sy" ::: "memory");
 
 		if (!ofnode_is_enabled(node)) {
@@ -263,8 +264,11 @@ int dm_extended_scan(bool pre_reloc_only)
 		"/firmware",
 		"/reserved-memory",
 	};
+	extern void qcom_ramoops_early_log(const char *msg);
 
+	qcom_ramoops_early_log("[EXT 0] dm_scan_fdt start\n");
 	ret = dm_scan_fdt(pre_reloc_only);
+	qcom_ramoops_early_log("[EXT 1] dm_scan_fdt done\n");
 	if (ret) {
 		dm_warn("dm_scan_fdt() failed: %d\n", ret);
 		return ret;
@@ -272,7 +276,13 @@ int dm_extended_scan(bool pre_reloc_only)
 
 	/* Some nodes aren't devices themselves but may contain some */
 	for (i = 0; i < ARRAY_SIZE(nodes); i++) {
+		qcom_ramoops_early_log("[EXT SCAN] ");
+		qcom_ramoops_early_log(nodes[i]);
+		qcom_ramoops_early_log("\n");
 		ret = dm_scan_fdt_ofnode_path(nodes[i], pre_reloc_only);
+		qcom_ramoops_early_log("[EXT DONE] ");
+		qcom_ramoops_early_log(nodes[i]);
+		qcom_ramoops_early_log("\n");
 		if (ret) {
 			dm_warn("dm_scan_fdt() scan for %s failed: %d\n",
 				nodes[i], ret);
@@ -280,6 +290,7 @@ int dm_extended_scan(bool pre_reloc_only)
 		}
 	}
 
+	qcom_ramoops_early_log("[EXT 2] dm_extended_scan completed\n");
 	return ret;
 }
 #endif
@@ -356,7 +367,9 @@ int dm_autoprobe(void)
 static int dm_scan(bool pre_reloc_only)
 {
 	int ret;
+	extern void qcom_ramoops_early_log(const char *msg);
 
+	qcom_ramoops_early_log("[SCAN 0] dm_scan_plat\n");
 	ret = dm_scan_plat(pre_reloc_only);
 	if (ret) {
 		dm_warn("dm_scan_plat() failed: %d\n", ret);
@@ -364,6 +377,7 @@ static int dm_scan(bool pre_reloc_only)
 	}
 
 	if (CONFIG_IS_ENABLED(OF_REAL)) {
+		qcom_ramoops_early_log("[SCAN 1] dm_extended_scan\n");
 		ret = dm_extended_scan(pre_reloc_only);
 		if (ret) {
 			dm_warn("dm_extended_scan() failed: %d\n", ret);
@@ -371,7 +385,9 @@ static int dm_scan(bool pre_reloc_only)
 		}
 	}
 
+	qcom_ramoops_early_log("[SCAN 2] dm_scan_other\n");
 	ret = dm_scan_other(pre_reloc_only);
+	qcom_ramoops_early_log("[SCAN 3] dm_scan_other done\n");
 	if (ret)
 		return ret;
 
@@ -381,13 +397,16 @@ static int dm_scan(bool pre_reloc_only)
 int dm_init_and_scan(bool pre_reloc_only)
 {
 	int ret;
+	extern void qcom_ramoops_early_log(const char *msg);
 
+	qcom_ramoops_early_log("[DMIS 0] dm_init\n");
 	ret = dm_init(CONFIG_IS_ENABLED(OF_LIVE));
 	if (ret) {
 		dm_warn("dm_init() failed: %d\n", ret);
 		return ret;
 	}
 	if (!CONFIG_IS_ENABLED(OF_PLATDATA_INST)) {
+		qcom_ramoops_early_log("[DMIS 1] dm_scan\n");
 		ret = dm_scan(pre_reloc_only);
 		if (ret) {
 			log_debug("dm_scan() failed: %d\n", ret);
@@ -395,13 +414,16 @@ int dm_init_and_scan(bool pre_reloc_only)
 		}
 	}
 	if (CONFIG_IS_ENABLED(DM_EVENT)) {
+		qcom_ramoops_early_log("[DMIS 2] event_notify\n");
 		ret = event_notify_null(gd->flags & GD_FLG_RELOC ?
 					EVT_DM_POST_INIT_R :
 					EVT_DM_POST_INIT_F);
+		qcom_ramoops_early_log("[DMIS 3] event_notify done\n");
 		if (ret)
 			return log_msg_ret("ev", ret);
 	}
 
+	qcom_ramoops_early_log("[DMIS 4] dm_init_and_scan complete\n");
 	return 0;
 }
 

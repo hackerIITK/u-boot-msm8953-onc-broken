@@ -235,6 +235,7 @@ void qcom_ramoops_early_log(const char *msg)
 {
 	/* Refresh APCS hardware watchdog on every log entry */
 	*(volatile uint32_t *)0x0b017004ULL = 1;
+	*(volatile uint32_t *)0x0b017008ULL = 1;
 	asm volatile("dsb sy" ::: "memory");
 
 	volatile uint32_t *pram = (volatile uint32_t *)0xBFEC0000ULL;
@@ -279,6 +280,7 @@ void early_delay_s(uint32_t sec)
 		uint64_t cur;
 		/* Pet APCS watchdog during delay */
 		*(volatile uint32_t *)0x0b017004ULL = 1;
+		*(volatile uint32_t *)0x0b017008ULL = 1;
 		asm volatile("dsb sy" ::: "memory");
 		asm volatile("mrs %0, cntpct_el0" : "=r" (cur));
 		if (cur >= target)
@@ -288,8 +290,9 @@ void early_delay_s(uint32_t sec)
 
 static void qcom_disable_watchdog(void)
 {
-	/* Pet APCS watchdog (0x0B017004 is WDT0_RST) */
+	/* Pet APCS watchdog (0x0B017004 is WDT0_RST, 0x0B017008 is APPS_WDOG_RESET) */
 	*(volatile uint32_t *)0x0b017004ULL = 1;
+	*(volatile uint32_t *)0x0b017008ULL = 1;
 	asm volatile("dsb sy" ::: "memory");
 }
 
@@ -332,8 +335,10 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v17) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v18) ===\n[0] In board_fdt_blob_setup\n");
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
+	qcom_ramoops_early_log("[CKPT 0] Splash delay 2s...\n");
+	early_delay_s(2);
 
 	internal_fdt = (struct fdt_header *)*fdtp;
 	external_fdt = (struct fdt_header *)get_prev_bl_fdt_addr();
