@@ -222,6 +222,11 @@ static int dm_scan_fdt_node(struct udevice *parent, ofnode parent_node,
 			char nbuf[96];
 			snprintf(nbuf, sizeof(nbuf), "  [BIND] %s\n", node_name ? node_name : "?");
 			qcom_ramoops_early_log(nbuf);
+
+			if (node_name && !strcmp(node_name, "soc")) {
+				qcom_ramoops_early_log("  [TEST v36] SKIPPING 'soc' bus children binding!\n");
+				continue;
+			}
 		}
 
 		err = lists_bind_fdt(parent, node, NULL, NULL, pre_reloc_only);
