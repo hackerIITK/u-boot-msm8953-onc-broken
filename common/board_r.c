@@ -262,39 +262,13 @@ static int initr_of_live(void)
 #ifdef CONFIG_DM
 static int initr_dm(void)
 {
-	int ret;
 	extern void qcom_ramoops_early_log(const char *msg);
 
 	qcom_ramoops_early_log("[DM 0] oftree_reset\n");
 	oftree_reset();
 
-	/* Drop the pre-reloc driver model and start a new one */
-	gd->dm_root = NULL;
-#ifdef CONFIG_TIMER
-	gd->timer = NULL;
-#endif
-	bootstage_start(BOOTSTAGE_ID_ACCUM_DM_R, "dm_r");
-	qcom_ramoops_early_log("[CKPT 1] Before dm_init_and_scan\n");
-	qcom_ramoops_early_log("[DM 1] dm_init_and_scan start\n");
-
-	/* 1-second delay at [DM 1] */
-	extern void early_delay_s(uint32_t sec);
-	qcom_ramoops_early_log("[TEST] Entering 1s delay at [DM 1]\n");
-	early_delay_s(1);
-	qcom_ramoops_early_log("[TEST] 1s delay at [DM 1] done!\n");
-
-	ret = dm_init_and_scan(false);
-	qcom_ramoops_early_log("[DM 2] dm_init_and_scan done\n");
-	qcom_ramoops_early_log("[CKPT 2] dm_init_and_scan OK\n");
-	bootstage_accum(BOOTSTAGE_ID_ACCUM_DM_R);
-	if (ret)
-		return ret;
-
-	qcom_ramoops_early_log("[DM 3] dm_autoprobe start\n");
-	ret = dm_autoprobe();
-	qcom_ramoops_early_log("[DM 4] dm_autoprobe done\n");
-	qcom_ramoops_early_log("[CKPT 3] dm_autoprobe OK\n");
-	return ret;
+	qcom_ramoops_early_log("[TEST v37] Bypassing post-reloc dm_init_and_scan to jump directly to console!\n");
+	return 0;
 }
 #endif
 
