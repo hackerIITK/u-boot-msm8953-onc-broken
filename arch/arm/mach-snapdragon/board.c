@@ -272,11 +272,14 @@ static inline void append_ts_str(volatile char *data, volatile char *raw, uint32
  */
 void qcom_ramoops_early_log(const char *msg)
 {
-	/* Reprogram BARK & BITE, Pet RESET_REG (0x08), and hold CTL_REG (0x04) permanently disabled */
+	/* Reprogram BARK & BITE, Pet watchdog on both 0x04 and 0x08, then clear both to 0 */
 	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
 	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
+	*(volatile uint32_t *)0x0b017004ULL = 1;
 	*(volatile uint32_t *)0x0b017008ULL = 1;
+	asm volatile("dsb sy" ::: "memory");
 	*(volatile uint32_t *)0x0b017004ULL = 0;
+	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
 
 	volatile uint32_t *pram = (volatile uint32_t *)0xBFEC0000ULL;
@@ -330,11 +333,14 @@ void early_delay_s(uint32_t sec)
 	target = start + (frq * sec);
 	while (1) {
 		uint64_t cur;
-		/* Reprogram BARK & BITE, Pet RESET_REG (0x08), and hold CTL_REG (0x04) permanently disabled */
+		/* Reprogram BARK & BITE, Pet watchdog on both 0x04 and 0x08, then clear both to 0 */
 		*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
 		*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
+		*(volatile uint32_t *)0x0b017004ULL = 1;
 		*(volatile uint32_t *)0x0b017008ULL = 1;
+		asm volatile("dsb sy" ::: "memory");
 		*(volatile uint32_t *)0x0b017004ULL = 0;
+		*(volatile uint32_t *)0x0b017008ULL = 0;
 		asm volatile("dsb sy" ::: "memory");
 		asm volatile("mrs %0, cntpct_el0" : "=r" (cur));
 		if (cur >= target)
@@ -344,15 +350,16 @@ void early_delay_s(uint32_t sec)
 
 static void qcom_disable_watchdog(void)
 {
-	/* Hold CTL_REG (0x04) disabled (NEVER write 1 to 0x04!) */
-	*(volatile uint32_t *)0x0b017004ULL = 0;
-	/* Reset / Pet counter via RESET_REG (0x08) */
-	*(volatile uint32_t *)0x0b017008ULL = 1;
-	/* Set Bark time and Bite time to maximum 31-bit value (0x7FFFFFFF = 1,118 seconds = 18.6 minutes) */
+	/* Reprogram BARK & BITE to max */
 	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
 	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
-	/* Ensure CTL remains 0 */
+	/* Pet on both potential reset registers (0x04 / 0x08) */
+	*(volatile uint32_t *)0x0b017004ULL = 1;
+	*(volatile uint32_t *)0x0b017008ULL = 1;
+	asm volatile("dsb sy" ::: "memory");
+	/* Clear enable bit on both potential control registers (0x04 / 0x08) */
 	*(volatile uint32_t *)0x0b017004ULL = 0;
+	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
 }
 
@@ -446,7 +453,7 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v28) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v29) ===\n[0] In board_fdt_blob_setup\n");
 	log_boot_timestamp();
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
 	qcom_ramoops_early_log("[CKPT 0] Splash painted OK\n");
