@@ -1,0 +1,218 @@
+INIT: setup_mon_len
+INIT: fdtdec_setup
+=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v14) ===
+[0] In board_fdt_blob_setup
+[1] Memory ranges parsed OK
+[1.1] In qcom_psci_fixup
+[1.2] Skipping PSCI SMC on msm8953/sdm632
+[1.4] Exiting board_fdt_blob_setup
+INIT: initf_malloc
+INIT: initf_upl
+INIT: log_init
+INIT: initf_bootstage
+INIT: event_init
+INIT: bloblist_maybe_init
+INIT: setup_spl_handoff
+INIT: arch_cpu_init
+INIT: mach_cpu_init
+INIT: initf_dm
+B: root_driver
+P: root_driver
+B: soc@0
+B: sleep-clk
+B: xo-board
+INIT: timer_init
+INIT: env_init
+INIT: init_baud_rate
+INIT: serial_init
+SERIAL: start serial_init
+SERIAL: finding console
+SERIAL: checking stdout
+B: serial-null
+P: serial-null
+SERIAL: stdout matched
+SERIAL: console find done
+SERIAL: setting baudrate
+SERIAL: setbrg done
+SERIAL: serial_init OK
+INIT: console_init_f
+INIT: display_options
+
+
+U-Boot 2026.07-g9494ae0f7580-dirty (Oct 29 2026 - 13:45:31 +0000)
+
+INIT: display_text_info
+INIT: checkcpu
+INIT: print_resetinfo
+INIT: show_board_info
+Model: Xiaomi Redmi 7 (onclite)
+INIT: announce_dram_init
+DRAM:  INIT: dram_init
+INIT: setup_dest_addr
+INIT: reserve_round_4k
+INIT: setup_relocaddr_from_bloblist
+INIT: arch_reserve_mmu
+INIT: reserve_video
+INIT: reserve_trace
+INIT: reserve_uboot
+INIT: reserve_malloc
+INIT: reserve_board
+INIT: reserve_global_data
+INIT: reserve_fdt
+INIT: reserve_bootstage
+INIT: reserve_bloblist
+INIT: reserve_arch
+INIT: reserve_stacks
+INIT: dram_init_banksize
+INIT: show_dram_config
+3 GiB
+INIT: setup_bdinfo
+INIT: display_new_sp
+INIT: reloc_fdt
+INIT: reloc_bootstage
+INIT: reloc_bloblist
+INIT: setup_reloc
+INIT: clear_bss
+INIT: cyclic_unregister_all
+INIT: initr_trace
+INIT: initr_reloc
+INIT: event_init
+INIT: initr_caches
+[2.0] Entering enable_caches
+[2.1] build_mem_map done
+[2.2] icache_enable done
+[2.3] setup_pgtables primary done
+[2.4] setup_pgtables emerg done
+[2.5.1] Invalidating TLB
+[2.5.2] Setting TTBR/TCR/MAIR
+[2.5.3] Enabling MMU (CR_M)
+[2.5.4] MMU ON! Invalidating dcache
+[2.5.5] Enabling dcache (CR_C)
+[2.6] MMU and dcache enabled successfully!
+INIT: initr_reloc_global_data
+INIT: initr_barrier
+INIT: initr_malloc
+INIT: log_init
+INIT: initr_bootstage
+INIT: initr_of_live
+INIT: initr_dm
+[DM 0] oftree_reset
+[DM 1] dm_init_and_scan start
+B: root_driver
+P: root_driver
+B: button_kbd
+B: remoteproc
+B: soc@0
+B: serial-null
+B: gpio-keys
+INIT: setup_mon_len
+INIT: fdtdec_setup
+=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v14) ===
+[0] In board_fdt_blob_setup
+[1] Memory ranges parsed OK
+[1.1] In qcom_psci_fixup
+[1.2] Skipping PSCI SMC on msm8953/sdm632
+[1.4] Exiting board_fdt_blob_setup
+INIT: initf_malloc
+INIT: initf_upl
+INIT: log_init
+INIT: initf_bootstage
+INIT: event_init
+INIT: bloblist_maybe_init
+INIT: setup_spl_handoff
+INIT: arch_cpu_init
+INIT: mach_cpu_init
+INIT: initf_dm
+B: root_driver
+P: root_driver
+B: soc@0
+B: sleep-clk
+B: xo-board
+INIT: timer_init
+INIT: env_init
+INIT: init_baud_rate
+INIT: serial_init
+SERIAL: start serial_init
+SERIAL: finding console
+SERIAL: checking stdout
+B: serial-null
+P: serial-null
+SERIAL: stdout matched
+SERIAL: console find done
+SERIAL: setting baudrate
+SERIAL: setbrg done
+SERIAL: serial_init OK
+INIT: console_init_f
+INIT: display_options
+
+
+U-Boot 2026.07-g9494ae0f7580-dirty (Oct 29 2026 - 13:45:31 +0000)
+
+INIT: display_text_info
+INIT: checkcpu
+INIT: print_resetinfo
+INIT: show_board_info
+Model: Xiaomi Redmi 7 (onclite)
+INIT: announce_dram_init
+DRAM:  INIT: dram_init
+INIT: setup_dest_addr
+INIT: reserve_round_4k
+INIT: setup_relocaddr_from_bloblist
+INIT: arch_reserve_mmu
+INIT: reserve_video
+INIT: reserve_trace
+INIT: reserve_uboot
+INIT: reserve_malloc
+INIT: reserve_board
+INIT: reserve_global_data
+INIT: reserve_fdt
+INIT: reserve_bootstage
+INIT: reserve_bloblist
+INIT: reserve_arch
+INIT: reserve_stacks
+INIT: dram_init_banksize
+INIT: show_dram_config
+3 GiB
+INIT: setup_bdinfo
+INIT: display_new_sp
+INIT: reloc_fdt
+INIT: reloc_bootstage
+INIT: reloc_bloblist
+INIT: setup_reloc
+INIT: clear_bss
+INIT: cyclic_unregister_all
+INIT: initr_trace
+INIT: initr_reloc
+INIT: event_init
+INIT: initr_caches
+[2.0] Entering enable_caches
+[2.1] build_mem_map done
+[2.2] icache_enable done
+[2.3] setup_pgtables primary done
+[2.4] setup_pgtables emerg done
+[2.5.1] Invalidating TLB
+[2.5.2] Setting TTBR/TCR/MAIR
+[2.5.3] Enabling MMU (CR_M)
+[2.5.4] MMU ON! Invalidating dcache
+[2.5.5] Enabling dcache (CR_C)
+[2.6] MMU and dcache enabled successfully!
+INIT: initr_reloc_global_data
+INIT: initr_barrier
+INIT: initr_malloc
+INIT: log_init
+INIT: initr_bootstage
+INIT: initr_of_live
+INIT: initr_dm
+[DM 0] oftree_reset
+[DM 1] dm_init_and_scan start
+B: root_driver
+P: root_driver
+B: button_kbd
+B: remoteproc
+B: soc@0
+B: serial-null
+B: gpio-keys
+B: key-volume-up
+B: framebuffer@90001000
+B: sleep-clk
+B: xo-board

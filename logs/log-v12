@@ -1,0 +1,683 @@
+user	0m0.000s
+sys	0m0.005s
+INIT: setup_mon_len
+INIT: fdtdec_setup
+=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v12) ===
+[0] In board_fdt_blob_setup
+[SLEEP 1] Sleeping 1s in pre-relocation...
+[SLEEP 1] Survived 1s in pre-relocation!
+[1] Memory ranges parsed OK
+[1.1] In qcom_psci_fixup
+[1.2] Skipping PSCI SMC on msm8953/sdm632
+[1.4] Exiting board_fdt_blob_setup
+INIT: initf_malloc
+INIT: initf_upl
+INIT: log_init
+INIT: initf_bootstage
+INIT: event_init
+INIT: bloblist_maybe_init
+INIT: setup_spl_handoff
+INIT: arch_cpu_init
+INIT: mach_cpu_init
+INIT: initf_dm
+B: root_driver
+P: root_driver
+NODE_SCAN: chosen
+NODE_DONE: chosen
+NODE_SCAN: clocks
+NODE_DONE: clocks
+NODE_SCAN: cpus
+NODE_DONE: cpus
+NODE_SCAN: firmware
+NODE_DONE: firmware
+NODE_SCAN: pmu
+NODE_DONE: pmu
+NODE_SCAN: remoteproc
+NODE_DONE: remoteproc
+NODE_SCAN: reserved-memory
+NODE_DONE: reserved-memory
+NODE_SCAN: smp2p-adsp
+NODE_DONE: smp2p-adsp
+NODE_SCAN: smp2p-modem
+NODE_DONE: smp2p-modem
+NODE_SCAN: smp2p-wcnss
+NODE_DONE: smp2p-wcnss
+NODE_SCAN: smsm
+NODE_DONE: smsm
+NODE_SCAN: soc@0
+B: soc@0
+NODE_SCAN: sram@60000
+NODE_DONE: sram@60000
+NODE_SCAN: rng@e3000
+NODE_DONE: rng@e3000
+NODE_SCAN: interconnect@400000
+NODE_DONE: interconnect@400000
+NODE_SCAN: thermal-sensor@4a9000
+NODE_DONE: thermal-sensor@4a9000
+NODE_SCAN: restart@4ab000
+NODE_DONE: restart@4ab000
+NODE_SCAN: interconnect@500000
+NODE_DONE: interconnect@500000
+NODE_SCAN: interconnect@580000
+NODE_DONE: interconnect@580000
+NODE_SCAN: pinctrl@1000000
+NODE_DONE: pinctrl@1000000
+NODE_SCAN: clock-controller@1800000
+NODE_DONE: clock-controller@1800000
+NODE_SCAN: hwlock@1905000
+NODE_DONE: hwlock@1905000
+NODE_SCAN: syscon@1937000
+NODE_DONE: syscon@1937000
+NODE_SCAN: syscon@193f044
+NODE_DONE: syscon@193f044
+NODE_SCAN: iommu@1c48000
+NODE_DONE: iommu@1c48000
+NODE_SCAN: iommu@1e20000
+NODE_DONE: iommu@1e20000
+NODE_SCAN: spmi@200f000
+NODE_DONE: spmi@200f000
+NODE_SCAN: dma-controller@7884000
+NODE_DONE: dma-controller@7884000
+NODE_SCAN: dma-controller@7ac4000
+NODE_DONE: dma-controller@7ac4000
+NODE_SCAN: interrupt-controller@b000000
+NODE_DONE: interrupt-controller@b000000
+NODE_SCAN: mailbox@b011000
+NODE_DONE: mailbox@b011000
+NODE_SCAN: timer@b120000
+NODE_DONE: timer@b120000
+NODE_DONE: soc@0
+NODE_SCAN: thermal-zones
+NODE_DONE: thermal-zones
+NODE_SCAN: timer
+NODE_DONE: timer
+NODE_SCAN: aliases
+NODE_DONE: aliases
+NODE_SCAN: serial-null
+NODE_DONE: serial-null
+NODE_SCAN: memory@40000000
+NODE_DONE: memory@40000000
+NODE_SCAN: gpio-keys
+NODE_DONE: gpio-keys
+NODE_SCAN: framebuffer@90001000
+NODE_DONE: framebuffer@90001000
+NODE_SCAN: sleep-clk
+B: sleep-clk
+NODE_DONE: sleep-clk
+NODE_SCAN: xo-board
+B: xo-board
+NODE_DONE: xo-board
+NODE_SCAN: scm
+NODE_DONE: scm
+NODE_SCAN: zap@81800000
+NODE_DONE: zap@81800000
+NODE_SCAN: smem@86300000
+NODE_DONE: smem@86300000
+NODE_SCAN: reserved@86400000
+NODE_DONE: reserved@86400000
+NODE_SCAN: mpss@86c00000
+NODE_DONE: mpss@86c00000
+NODE_SCAN: adsp@8d600000
+NODE_DONE: adsp@8d600000
+NODE_SCAN: dfps-data@90000000
+NODE_DONE: dfps-data@90000000
+NODE_SCAN: venus@91400000
+NODE_DONE: venus@91400000
+NODE_SCAN: mba@92000000
+NODE_DONE: mba@92000000
+NODE_SCAN: rmtfs@f2d00000
+NODE_DONE: rmtfs@f2d00000
+NODE_SCAN: lk2nd@8f600000
+NODE_DONE: lk2nd@8f600000
+NODE_SCAN: qseecom@84a00000
+NODE_DONE: qseecom@84a00000
+NODE_SCAN: wcnss@8e800000
+NODE_DONE: wcnss@8e800000
+NODE_SCAN: ramoops@bfe80000
+NODE_DONE: ramoops@bfe80000
+INIT: timer_init
+INIT: env_init
+INIT: init_baud_rate
+INIT: serial_init
+SERIAL: start serial_init
+SERIAL: finding console
+SERIAL: checking stdout
+B: serial-null
+P: serial-null
+SERIAL: stdout matched
+SERIAL: console find done
+SERIAL: setting baudrate
+SERIAL: setbrg done
+SERIAL: serial_init OK
+INIT: console_init_f
+INIT: display_options
+INIT: display_text_info
+INIT: checkcpu
+INIT: print_resetinfo
+INIT: show_board_info
+INIT: announce_dram_init
+INIT: dram_init
+INIT: setup_dest_addr
+INIT: reserve_round_4k
+INIT: setup_relocaddr_from_bloblist
+INIT: arch_reserve_mmu
+INIT: reserve_video
+INIT: reserve_trace
+INIT: reserve_uboot
+INIT: reserve_malloc
+INIT: reserve_board
+INIT: reserve_global_data
+INIT: reserve_fdt
+INIT: reserve_bootstage
+INIT: reserve_bloblist
+INIT: reserve_arch
+INIT: reserve_stacks
+INIT: dram_init_banksize
+INIT: show_dram_config
+INIT: setup_bdinfo
+INIT: display_new_sp
+INIT: reloc_fdt
+INIT: reloc_bootstage
+INIT: reloc_bloblist
+INIT: setup_reloc
+INIT: clear_bss
+INIT: cyclic_unregister_all
+INIT: initr_trace
+INIT: initr_reloc
+INIT: event_init
+INIT: initr_caches
+[2.0] Entering enable_caches
+[2.1] build_mem_map done
+[2.2] icache_enable done
+[2.3] setup_pgtables primary done
+[2.4] setup_pgtables emerg done
+[2.5.1] Invalidating TLB
+[2.5.2] Setting TTBR/TCR/MAIR
+[2.5.3] Enabling MMU (CR_M)
+[2.5.4] MMU ON! Invalidating dcache
+[2.5.5] Enabling dcache (CR_C)
+[2.6] MMU and dcache enabled successfully!
+[SLEEP 2] Sleeping 1s with MMU and dcache ON...
+[SLEEP 2] Survived 1s with MMU and dcache ON!
+INIT: initr_reloc_global_data
+INIT: initr_barrier
+INIT: initr_malloc
+INIT: log_init
+INIT: initr_bootstage
+INIT: initr_of_live
+INIT: initr_dm
+[DM 0] oftree_reset
+[DM 1] dm_init_and_scan start
+B: root_driver
+P: root_driver
+B: button_kbd
+NODE_SCAN: chosen
+NODE_DONE: chosen
+NODE_SCAN: clocks
+NODE_DONE: clocks
+NODE_SCAN: cpus
+NODE_DONE: cpus
+NODE_SCAN: firmware
+NODE_DONE: firmware
+NODE_SCAN: pmu
+NODE_DONE: pmu
+NODE_SCAN: remoteproc
+B: remoteproc
+NODE_SCAN: smd-edge
+NODE_DONE: smd-edge
+NODE_DONE: remoteproc
+NODE_SCAN: reserved-memory
+NODE_DONE: reserved-memory
+NODE_SCAN: smp2p-adsp
+NODE_DONE: smp2p-adsp
+NODE_SCAN: smp2p-modem
+NODE_DONE: smp2p-modem
+NODE_SCAN: smp2p-wcnss
+NODE_DONE: smp2p-wcnss
+NODE_SCAN: smsm
+NODE_DONE: smsm
+NODE_SCAN: soc@0
+B: soc@0
+NODE_SCAN: sram@60000
+NODE_DONE: sram@60000
+NODE_SCAN: rng@e3000
+NODE_DONE: rng@e3000
+NODE_SCAN: interconnect@400000
+NODE_DONE: interconnect@400000
+NODE_SCAN: thermal-sensor@4a9000
+NODE_DONE: thermal-sensor@4a9000
+NODE_SCAN: restart@4ab000
+NODE_DONE: restart@4ab000
+NODE_SCAN: interconnect@500000
+NODE_DONE: interconnect@500000
+NODE_SCAN: interconnect@580000
+NODE_DONE: interconnect@580000
+NODE_SCAN: pinctrl@1000000
+NODE_DONE: pinctrl@1000000
+NODE_SCAN: clock-controller@1800000
+NODE_DONE: clock-controller@1800000
+NODE_SCAN: hwlock@1905000
+NODE_DONE: hwlock@1905000
+NODE_SCAN: syscon@1937000
+NODE_DONE: syscon@1937000
+NODE_SCAN: syscon@193f044
+NODE_DONE: syscon@193f044
+NODE_SCAN: iommu@1c48000
+NODE_DONE: iommu@1c48000
+NODE_SCAN: iommu@1e20000
+NODE_DONE: iommu@1e20000
+NODE_SCAN: spmi@200f000
+NODE_DONE: spmi@200f000
+NODE_SCAN: dma-controller@7884000
+NODE_DONE: dma-controller@7884000
+NODE_SCAN: dma-controller@7ac4000
+NODE_DONE: dma-controller@7ac4000
+NODE_SCAN: interrupt-controller@b000000
+NODE_DONE: interrupt-controller@b000000
+NODE_SCAN: mailbox@b011000
+NODE_DONE: mailbox@b011000
+NODE_SCAN: timer@b120000
+NODE_DONE: timer@b120000
+NODE_DONE: soc@0
+NODE_SCAN: thermal-zones
+NODE_DONE: thermal-zones
+NODE_SCAN: timer
+NODE_DONE: timer
+NODE_SCAN: aliases
+NODE_DONE: aliases
+NODE_SCAN: serial-null
+B: serial-null
+NODE_DONE: serial-null
+NODE_SCAN: memory@40000000
+NODE_DONE: memory@40000000
+NODE_SCAN: gpio-keys
+B: gpio-keys
+B: key-volume-up
+NODE_DONE: gpio-keys
+NODE_SCAN: framebuffer@90001000
+B: framebuffer@90001000
+NODE_DONE: framebuffer@90001000
+NODE_SCAN: sleep-clk
+B: sleep-clk
+NODE_DONE: sleep-clk
+NODE_SCAN: xo-board
+B: xo-board
+NODE_DONE: xo-board
+NODE_SCAN: scm
+NODE_DONE: scm
+NODE_SCAN: zap@81800000
+NODE_DONE: zap@81800000
+NODE_SCAN: smem@86300000
+B: smem@86300000
+NODE_DONE: smem@86300000
+NODE_SCAN: reserved@86400000
+NODE_DONE: reserved@86400000
+NODE_SCAN: mpss@86c00000
+NODE_DONE: mpss@86c00000
+NODE_SCAN: adsp@8d600000
+NODE_DONE: adsp@8d600000
+NODE_SCAN: dfps-data@90000000
+NODE_DONE: dfps-data@90000000
+NODE_SCAN: venus@91400000
+NODE_DONE: venus@91400000
+NODE_SCAN: mba@92000000
+NODE_DONE: mba@92000000
+NODE_SCAN: rmtfs@f2d00000
+NODE_DONE: rmtfs@f2d00000
+NODE_SCAN: lk2nd@8f600000
+NODE_DONE: lk2nd@8f600000
+NODE_SCAN: qseecom@84a00000
+NODE_DONE: qseecom@84a00000
+NODE_SCAN: wcnss@8e800000
+NODE_DONE: wcnss@8e800000
+NODE_SCAN: ramoops@bfe80000
+NODE_DONE: ramoops@bfe80000
+B: bootstd
+B: extlinux
+INIT: setup_mon_len
+INIT: fdtdec_setup
+=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v12) ===
+[0] In board_fdt_blob_setup
+[SLEEP 1] Sleeping 1s in pre-relocation...
+[SLEEP 1] Survived 1s in pre-relocation!
+[1] Memory ranges parsed OK
+[1.1] In qcom_psci_fixup
+[1.2] Skipping PSCI SMC on msm8953/sdm632
+[1.4] Exiting board_fdt_blob_setup
+INIT: initf_malloc
+INIT: initf_upl
+INIT: log_init
+INIT: initf_bootstage
+INIT: event_init
+INIT: bloblist_maybe_init
+INIT: setup_spl_handoff
+INIT: arch_cpu_init
+INIT: mach_cpu_init
+INIT: initf_dm
+B: root_driver
+P: root_driver
+NODE_SCAN: chosen
+NODE_DONE: chosen
+NODE_SCAN: clocks
+NODE_DONE: clocks
+NODE_SCAN: cpus
+NODE_DONE: cpus
+NODE_SCAN: firmware
+NODE_DONE: firmware
+NODE_SCAN: pmu
+NODE_DONE: pmu
+NODE_SCAN: remoteproc
+NODE_DONE: remoteproc
+NODE_SCAN: reserved-memory
+NODE_DONE: reserved-memory
+NODE_SCAN: smp2p-adsp
+NODE_DONE: smp2p-adsp
+NODE_SCAN: smp2p-modem
+NODE_DONE: smp2p-modem
+NODE_SCAN: smp2p-wcnss
+NODE_DONE: smp2p-wcnss
+NODE_SCAN: smsm
+NODE_DONE: smsm
+NODE_SCAN: soc@0
+B: soc@0
+NODE_SCAN: sram@60000
+NODE_DONE: sram@60000
+NODE_SCAN: rng@e3000
+NODE_DONE: rng@e3000
+NODE_SCAN: interconnect@400000
+NODE_DONE: interconnect@400000
+NODE_SCAN: thermal-sensor@4a9000
+NODE_DONE: thermal-sensor@4a9000
+NODE_SCAN: restart@4ab000
+NODE_DONE: restart@4ab000
+NODE_SCAN: interconnect@500000
+NODE_DONE: interconnect@500000
+NODE_SCAN: interconnect@580000
+NODE_DONE: interconnect@580000
+NODE_SCAN: pinctrl@1000000
+NODE_DONE: pinctrl@1000000
+NODE_SCAN: clock-controller@1800000
+NODE_DONE: clock-controller@1800000
+NODE_SCAN: hwlock@1905000
+NODE_DONE: hwlock@1905000
+NODE_SCAN: syscon@1937000
+NODE_DONE: syscon@1937000
+NODE_SCAN: syscon@193f044
+NODE_DONE: syscon@193f044
+NODE_SCAN: iommu@1c48000
+NODE_DONE: iommu@1c48000
+NODE_SCAN: iommu@1e20000
+NODE_DONE: iommu@1e20000
+NODE_SCAN: spmi@200f000
+NODE_DONE: spmi@200f000
+NODE_SCAN: dma-controller@7884000
+NODE_DONE: dma-controller@7884000
+NODE_SCAN: dma-controller@7ac4000
+NODE_DONE: dma-controller@7ac4000
+NODE_SCAN: interrupt-controller@b000000
+NODE_DONE: interrupt-controller@b000000
+NODE_SCAN: mailbox@b011000
+NODE_DONE: mailbox@b011000
+NODE_SCAN: timer@b120000
+NODE_DONE: timer@b120000
+NODE_DONE: soc@0
+NODE_SCAN: thermal-zones
+NODE_DONE: thermal-zones
+NODE_SCAN: timer
+NODE_DONE: timer
+NODE_SCAN: aliases
+NODE_DONE: aliases
+NODE_SCAN: serial-null
+NODE_DONE: serial-null
+NODE_SCAN: memory@40000000
+NODE_DONE: memory@40000000
+NODE_SCAN: gpio-keys
+NODE_DONE: gpio-keys
+NODE_SCAN: framebuffer@90001000
+NODE_DONE: framebuffer@90001000
+NODE_SCAN: sleep-clk
+B: sleep-clk
+NODE_DONE: sleep-clk
+NODE_SCAN: xo-board
+B: xo-board
+NODE_DONE: xo-board
+NODE_SCAN: scm
+NODE_DONE: scm
+NODE_SCAN: zap@81800000
+NODE_DONE: zap@81800000
+NODE_SCAN: smem@86300000
+NODE_DONE: smem@86300000
+NODE_SCAN: reserved@86400000
+NODE_DONE: reserved@86400000
+NODE_SCAN: mpss@86c00000
+NODE_DONE: mpss@86c00000
+NODE_SCAN: adsp@8d600000
+NODE_DONE: adsp@8d600000
+NODE_SCAN: dfps-data@90000000
+NODE_DONE: dfps-data@90000000
+NODE_SCAN: venus@91400000
+NODE_DONE: venus@91400000
+NODE_SCAN: mba@92000000
+NODE_DONE: mba@92000000
+NODE_SCAN: rmtfs@f2d00000
+NODE_DONE: rmtfs@f2d00000
+NODE_SCAN: lk2nd@8f600000
+NODE_DONE: lk2nd@8f600000
+NODE_SCAN: qseecom@84a00000
+NODE_DONE: qseecom@84a00000
+NODE_SCAN: wcnss@8e800000
+NODE_DONE: wcnss@8e800000
+NODE_SCAN: ramoops@bfe80000
+NODE_DONE: ramoops@bfe80000
+INIT: timer_init
+INIT: env_init
+INIT: init_baud_rate
+INIT: serial_init
+SERIAL: start serial_init
+SERIAL: finding console
+SERIAL: checking stdout
+B: serial-null
+P: serial-null
+SERIAL: stdout matched
+SERIAL: console find done
+SERIAL: setting baudrate
+SERIAL: setbrg done
+SERIAL: serial_init OK
+INIT: console_init_f
+INIT: display_options
+INIT: display_text_info
+INIT: checkcpu
+INIT: print_resetinfo
+INIT: show_board_info
+INIT: announce_dram_init
+INIT: dram_init
+INIT: setup_dest_addr
+INIT: reserve_round_4k
+INIT: setup_relocaddr_from_bloblist
+INIT: arch_reserve_mmu
+INIT: reserve_video
+INIT: reserve_trace
+INIT: reserve_uboot
+INIT: reserve_malloc
+INIT: reserve_board
+INIT: reserve_global_data
+INIT: reserve_fdt
+INIT: reserve_bootstage
+INIT: reserve_bloblist
+INIT: reserve_arch
+INIT: reserve_stacks
+INIT: dram_init_banksize
+INIT: show_dram_config
+INIT: setup_bdinfo
+INIT: display_new_sp
+INIT: reloc_fdt
+INIT: reloc_bootstage
+INIT: reloc_bloblist
+INIT: setup_reloc
+INIT: clear_bss
+INIT: cyclic_unregister_all
+INIT: initr_trace
+INIT: initr_reloc
+INIT: event_init
+INIT: initr_caches
+[2.0] Entering enable_caches
+[2.1] build_mem_map done
+[2.2] icache_enable done
+[2.3] setup_pgtables primary done
+[2.4] setup_pgtables emerg done
+[2.5.1] Invalidating TLB
+[2.5.2] Setting TTBR/TCR/MAIR
+[2.5.3] Enabling MMU (CR_M)
+[2.5.4] MMU ON! Invalidating dcache
+[2.5.5] Enabling dcache (CR_C)
+[2.6] MMU and dcache enabled successfully!
+[SLEEP 2] Sleeping 1s with MMU and dcache ON...
+[SLEEP 2] Survived 1s with MMU and dcache ON!
+INIT: initr_reloc_global_data
+INIT: initr_barrier
+INIT: initr_malloc
+INIT: log_init
+INIT: initr_bootstage
+INIT: initr_of_live
+INIT: initr_dm
+[DM 0] oftree_reset
+[DM 1] dm_init_and_scan start
+B: root_driver
+P: root_driver
+B: button_kbd
+NODE_SCAN: chosen
+NODE_DONE: chosen
+NODE_SCAN: clocks
+NODE_DONE: clocks
+NODE_SCAN: cpus
+NODE_DONE: cpus
+NODE_SCAN: firmware
+NODE_DONE: firmware
+NODE_SCAN: pmu
+NODE_DONE: pmu
+NODE_SCAN: remoteproc
+B: remoteproc
+NODE_SCAN: smd-edge
+NODE_DONE: smd-edge
+NODE_DONE: remoteproc
+NODE_SCAN: reserved-memory
+NODE_DONE: reserved-memory
+NODE_SCAN: smp2p-adsp
+NODE_DONE: smp2p-adsp
+NODE_SCAN: smp2p-modem
+NODE_DONE: smp2p-modem
+NODE_SCAN: smp2p-wcnss
+NODE_DONE: smp2p-wcnss
+NODE_SCAN: smsm
+NODE_DONE: smsm
+NODE_SCAN: soc@0
+B: soc@0
+NODE_SCAN: sram@60000
+NODE_DONE: sram@60000
+NODE_SCAN: rng@e3000
+NODE_DONE: rng@e3000
+NODE_SCAN: interconnect@400000
+NODE_DONE: interconnect@400000
+NODE_SCAN: thermal-sensor@4a9000
+NODE_DONE: thermal-sensor@4a9000
+NODE_SCAN: restart@4ab000
+NODE_DONE: restart@4ab000
+NODE_SCAN: interconnect@500000
+NODE_DONE: interconnect@500000
+NODE_SCAN: interconnect@580000
+NODE_DONE: interconnect@580000
+NODE_SCAN: pinctrl@1000000
+NODE_DONE: pinctrl@1000000
+NODE_SCAN: clock-controller@1800000
+NODE_DONE: clock-controller@1800000
+NODE_SCAN: hwlock@1905000
+NODE_DONE: hwlock@1905000
+NODE_SCAN: syscon@1937000
+NODE_DONE: syscon@1937000
+NODE_SCAN: syscon@193f044
+NODE_DONE: syscon@193f044
+NODE_SCAN: iommu@1c48000
+NODE_DONE: iommu@1c48000
+NODE_SCAN: iommu@1e20000
+NODE_DONE: iommu@1e20000
+NODE_SCAN: spmi@200f000
+NODE_DONE: spmi@200f000
+NODE_SCAN: dma-controller@7884000
+NODE_DONE: dma-controller@7884000
+NODE_SCAN: dma-controller@7ac4000
+NODE_DONE: dma-controller@7ac4000
+NODE_SCAN: interrupt-controller@b000000
+NODE_DONE: interrupt-controller@b000000
+NODE_SCAN: mailbox@b011000
+NODE_DONE: mailbox@b011000
+NODE_SCAN: timer@b120000
+NODE_DONE: timer@b120000
+NODE_DONE: soc@0
+NODE_SCAN: thermal-zones
+NODE_DONE: thermal-zones
+NODE_SCAN: timer
+NODE_DONE: timer
+NODE_SCAN: aliases
+NODE_DONE: aliases
+NODE_SCAN: serial-null
+B: serial-null
+NODE_DONE: serial-null
+NODE_SCAN: memory@40000000
+NODE_DONE: memory@40000000
+NODE_SCAN: gpio-keys
+B: gpio-keys
+B: key-volume-up
+NODE_DONE: gpio-keys
+NODE_SCAN: framebuffer@90001000
+B: framebuffer@90001000
+NODE_DONE: framebuffer@90001000
+NODE_SCAN: sleep-clk
+B: sleep-clk
+NODE_DONE: sleep-clk
+NODE_SCAN: xo-board
+B: xo-board
+NODE_DONE: xo-board
+NODE_SCAN: scm
+NODE_DONE: scm
+NODE_SCAN: zap@81800000
+NODE_DONE: zap@81800000
+NODE_SCAN: smem@86300000
+B: smem@86300000
+NODE_DONE: smem@86300000
+NODE_SCAN: reserved@86400000
+NODE_DONE: reserved@86400000
+NODE_SCAN: mpss@86c00000
+NODE_DONE: mpss@86c00000
+NODE_SCAN: adsp@8d600000
+NODE_DONE: adsp@8d600000
+NODE_SCAN: dfps-data@90000000
+NODE_DONE: dfps-data@90000000
+NODE_SCAN: venus@91400000
+NODE_DONE: venus@91400000
+NODE_SCAN: mba@92000000
+NODE_DONE: mba@92000000
+NODE_SCAN: rmtfs@f2d00000
+NODE_DONE: rmtfs@f2d00000
+NODE_SCAN: lk2nd@8f600000
+NODE_DONE: lk2nd@8f600000
+NODE_SCAN: qseecom@84a00000
+NODE_DONE: qseecom@84a00000
+NODE_SCAN: wcnss@8e800000
+NODE_DONE: wcnss@8e800000
+NODE_SCAN: ramoops@bfe80000
+NODE_DONE: ramoops@bfe80000
+B: bootstd
+B: extlinux
+B: script
+B: efi_mgr
+B: efi
+B: pxe
+B: vbe_simple
+[DM 2] dm_init_and_scan done
+[SLEEP 3] Sleeping 1s after dm_init_and_scan...
+[SLEEP 3] Survived 1s after dm_init_and_scan!
+[DM 3] dm_autoprobe start
+[DM 4] dm_autoprobe done
+INIT: board_init
+[3] Entering board_init
+Board: Xiaomi Redmi 7 (onclite / sdm632)

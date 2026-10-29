@@ -1,0 +1,418 @@
+INIT: setup_mon_len
+INIT: fdtdec_setup
+=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v18) ===
+[0] In board_fdt_blob_setup
+[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!
+[CKPT 0] Splash delay 2s...
+[1] Memory ranges parsed OK
+[1.1] In qcom_psci_fixup
+[1.2] Skipping PSCI SMC on msm8953/sdm632
+[1.4] Exiting board_fdt_blob_setup
+INIT: initf_malloc
+INIT: initf_upl
+INIT: log_init
+INIT: initf_bootstage
+INIT: event_init
+INIT: bloblist_maybe_init
+INIT: setup_spl_handoff
+INIT: arch_cpu_init
+INIT: mach_cpu_init
+INIT: initf_dm
+[DMIS 0] dm_init
+B: root_driver
+P: root_driver
+[DMIS 1] dm_scan
+[SCAN 0] dm_scan_plat
+[SCAN 1] dm_extended_scan
+[EXT 0] dm_scan_fdt start
+B: soc@0
+[EXT 1] dm_scan_fdt done
+[EXT SCAN] /chosen
+[EXT DONE] /chosen
+[EXT SCAN] /clocks
+B: sleep-clk
+B: xo-board
+[EXT DONE] /clocks
+[EXT SCAN] /firmware
+[EXT DONE] /firmware
+[EXT SCAN] /reserved-memory
+[EXT DONE] /reserved-memory
+[EXT 2] dm_extended_scan completed
+[SCAN 2] dm_scan_other
+[SCAN 3] dm_scan_other done
+[DMIS 2] event_notify
+[DMIS 3] event_notify done
+[DMIS 4] dm_init_and_scan complete
+INIT: timer_init
+INIT: env_init
+INIT: init_baud_rate
+INIT: serial_init
+SERIAL: start serial_init
+SERIAL: finding console
+SERIAL: checking stdout
+B: serial-null
+P: serial-null
+SERIAL: stdout matched
+SERIAL: console find done
+SERIAL: setting baudrate
+SERIAL: setbrg done
+SERIAL: serial_init OK
+INIT: console_init_f
+INIT: display_options
+INIT: display_text_info
+INIT: checkcpu
+INIT: print_resetinfo
+INIT: show_board_info
+INIT: announce_dram_init
+INIT: dram_init
+INIT: setup_dest_addr
+INIT: reserve_round_4k
+INIT: setup_relocaddr_from_bloblist
+INIT: arch_reserve_mmu
+INIT: reserve_video
+INIT: reserve_trace
+INIT: reserve_uboot
+INIT: reserve_malloc
+INIT: reserve_board
+INIT: reserve_global_data
+INIT: reserve_fdt
+INIT: reserve_bootstage
+INIT: reserve_bloblist
+INIT: reserve_arch
+INIT: reserve_stacks
+INIT: dram_init_banksize
+INIT: show_dram_config
+INIT: setup_bdinfo
+INIT: display_new_sp
+INIT: reloc_fdt
+INIT: reloc_bootstage
+INIT: reloc_bloblist
+INIT: setup_reloc
+INIT: clear_bss
+INIT: cyclic_unregister_all
+INIT: initr_trace
+INIT: initr_reloc
+INIT: event_init
+INIT: initr_caches
+[2.0] Entering enable_caches
+[2.1] build_mem_map done
+[2.2] icache_enable done
+[2.3] setup_pgtables primary done
+[2.4] setup_pgtables emerg done
+[2.5.1] Invalidating TLB
+[2.5.2] Setting TTBR/TCR/MAIR
+[2.5.3] Enabling MMU (CR_M)
+[2.5.4] MMU ON! Invalidating dcache
+[2.5.5] Enabling dcache (CR_C)
+[2.6] MMU and dcache enabled successfully!
+INIT: initr_reloc_global_data
+INIT: initr_barrier
+INIT: initr_malloc
+INIT: log_init
+INIT: initr_bootstage
+INIT: initr_of_live
+INIT: initr_dm
+[DM 0] oftree_reset
+[CKPT 1] Before dm_init_and_scan (2s delay)...
+[DM 1] dm_init_and_scan start
+[DMIS 0] dm_init
+B: root_driver
+P: root_driver
+[DMIS 1] dm_scan
+[SCAN 0] dm_scan_plat
+B: button_kbd
+[SCAN 1] dm_extended_scan
+[EXT 0] dm_scan_fdt start
+N: chosen
+N: clocks
+N: cpus
+N: firmware
+N: pmu
+N: remoteproc
+B: remoteproc
+N: smd-edge
+N: reserved-memory
+N: smp2p-adsp
+N: smp2p-modem
+N: smp2p-wcnss
+N: smsm
+N: soc@0
+B: soc@0
+N: sram@60000
+N: rng@e3000
+N: interconnect@400000
+N: thermal-sensor@4a9000
+N: restart@4ab000
+N: interconnect@500000
+N: interconnect@580000
+N: pinctrl@1000000
+N: clock-controller@1800000
+N: hwlock@1905000
+N: syscon@1937000
+N: syscon@193f044
+N: iommu@1c48000
+N: iommu@1e20000
+N: spmi@200f000
+N: dma-controller@7884000
+N: dma-controller@7ac4000
+N: interrupt-controller@b000000
+N: mailbox@b011000
+N: timer@b120000
+N: thermal-zones
+N: timer
+N: aliases
+N: serial-null
+B: serial-null
+N: memory@40000000
+N: gpio-keys
+B: gpio-keys
+B: key-volume-up
+[EXT 1] dm_scan_fdt done
+[EXT SCAN] /chosen
+N: framebuffer@90001000
+B: framebuffer@90001000
+[EXT DONE] /chosen
+[EXT SCAN] /clocks
+N: sleep-clk
+B: sleep-clk
+N: xo-board
+B: xo-board
+[EXT DONE] /clocks
+[EXT SCAN] /firmware
+N: scm
+[EXT DONE] /firmware
+[EXT SCAN] /reserved-memory
+N: zap@81800000
+N: smem@86300000
+B: smem@86300000
+N: reserved@86400000
+N: mpss@86c00000
+N: adsp@8d600000
+N: dfps-data@90000000
+N: venus@91400000
+N: mba@92000000
+N: rmtfs@f2d00000
+N: lk2nd@8f600000
+N: qseecom@84a00000
+N: wcnss@8e800000
+N: ramoops@bfe80000
+[EXT DONE] /reserved-memory
+[EXT 2] dm_extended_scan completed
+[SCAN 2] dm_scan_other
+B: bootstd
+B: extlinux
+B: script
+B: efi_mgr
+B: efi
+B: pxe
+B: vbe_simple
+[SCAN 3] dm_scan_other done
+[DMIS 2] event_notify
+[DMIS 3] event_notify done
+[DMIS 4] dm_init_and_scan complete
+[DM 2] dm_init_and_scan done
+[CKPT 2] dm_init_and_scan done (2s delay)...
+INIT: setup_mon_len
+INIT: fdtdec_setup
+=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v18) ===
+[0] In board_fdt_blob_setup
+[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!
+[CKPT 0] Splash delay 2s...
+[1] Memory ranges parsed OK
+[1.1] In qcom_psci_fixup
+[1.2] Skipping PSCI SMC on msm8953/sdm632
+[1.4] Exiting board_fdt_blob_setup
+INIT: initf_malloc
+INIT: initf_upl
+INIT: log_init
+INIT: initf_bootstage
+INIT: event_init
+INIT: bloblist_maybe_init
+INIT: setup_spl_handoff
+INIT: arch_cpu_init
+INIT: mach_cpu_init
+INIT: initf_dm
+[DMIS 0] dm_init
+B: root_driver
+P: root_driver
+[DMIS 1] dm_scan
+[SCAN 0] dm_scan_plat
+[SCAN 1] dm_extended_scan
+[EXT 0] dm_scan_fdt start
+B: soc@0
+[EXT 1] dm_scan_fdt done
+[EXT SCAN] /chosen
+[EXT DONE] /chosen
+[EXT SCAN] /clocks
+B: sleep-clk
+B: xo-board
+[EXT DONE] /clocks
+[EXT SCAN] /firmware
+[EXT DONE] /firmware
+[EXT SCAN] /reserved-memory
+[EXT DONE] /reserved-memory
+[EXT 2] dm_extended_scan completed
+[SCAN 2] dm_scan_other
+[SCAN 3] dm_scan_other done
+[DMIS 2] event_notify
+[DMIS 3] event_notify done
+[DMIS 4] dm_init_and_scan complete
+INIT: timer_init
+INIT: env_init
+INIT: init_baud_rate
+INIT: serial_init
+SERIAL: start serial_init
+SERIAL: finding console
+SERIAL: checking stdout
+B: serial-null
+P: serial-null
+SERIAL: stdout matched
+SERIAL: console find done
+SERIAL: setting baudrate
+SERIAL: setbrg done
+SERIAL: serial_init OK
+INIT: console_init_f
+INIT: display_options
+INIT: display_text_info
+INIT: checkcpu
+INIT: print_resetinfo
+INIT: show_board_info
+INIT: announce_dram_init
+INIT: dram_init
+INIT: setup_dest_addr
+INIT: reserve_round_4k
+INIT: setup_relocaddr_from_bloblist
+INIT: arch_reserve_mmu
+INIT: reserve_video
+INIT: reserve_trace
+INIT: reserve_uboot
+INIT: reserve_malloc
+INIT: reserve_board
+INIT: reserve_global_data
+INIT: reserve_fdt
+INIT: reserve_bootstage
+INIT: reserve_bloblist
+INIT: reserve_arch
+INIT: reserve_stacks
+INIT: dram_init_banksize
+INIT: show_dram_config
+INIT: setup_bdinfo
+INIT: display_new_sp
+INIT: reloc_fdt
+INIT: reloc_bootstage
+INIT: reloc_bloblist
+INIT: setup_reloc
+INIT: clear_bss
+INIT: cyclic_unregister_all
+INIT: initr_trace
+INIT: initr_reloc
+INIT: event_init
+INIT: initr_caches
+[2.0] Entering enable_caches
+[2.1] build_mem_map done
+[2.2] icache_enable done
+[2.3] setup_pgtables primary done
+[2.4] setup_pgtables emerg done
+[2.5.1] Invalidating TLB
+[2.5.2] Setting TTBR/TCR/MAIR
+[2.5.3] Enabling MMU (CR_M)
+[2.5.4] MMU ON! Invalidating dcache
+[2.5.5] Enabling dcache (CR_C)
+[2.6] MMU and dcache enabled successfully!
+INIT: initr_reloc_global_data
+INIT: initr_barrier
+INIT: initr_malloc
+INIT: log_init
+INIT: initr_bootstage
+INIT: initr_of_live
+INIT: initr_dm
+[DM 0] oftree_reset
+[CKPT 1] Before dm_init_and_scan (2s delay)...
+[DM 1] dm_init_and_scan start
+[DMIS 0] dm_init
+B: root_driver
+P: root_driver
+[DMIS 1] dm_scan
+[SCAN 0] dm_scan_plat
+B: button_kbd
+[SCAN 1] dm_extended_scan
+[EXT 0] dm_scan_fdt start
+N: chosen
+N: clocks
+N: cpus
+N: firmware
+N: pmu
+N: remoteproc
+B: remoteproc
+N: smd-edge
+N: reserved-memory
+N: smp2p-adsp
+N: smp2p-modem
+N: smp2p-wcnss
+N: smsm
+N: soc@0
+B: soc@0
+N: sram@60000
+N: rng@e3000
+N: interconnect@400000
+N: thermal-sensor@4a9000
+N: restart@4ab000
+N: interconnect@500000
+N: interconnect@580000
+N: pinctrl@1000000
+N: clock-controller@1800000
+N: hwlock@1905000
+N: syscon@1937000
+N: syscon@193f044
+N: iommu@1c48000
+N: iommu@1e20000
+N: spmi@200f000
+N: dma-controller@7884000
+N: dma-controller@7ac4000
+N: interrupt-controller@b000000
+N: mailbox@b011000
+N: timer@b120000
+N: thermal-zones
+N: timer
+N: aliases
+N: serial-null
+B: serial-null
+N: memory@40000000
+N: gpio-keys
+B: gpio-keys
+B: key-volume-up
+[EXT 1] dm_scan_fdt done
+[EXT SCAN] /chosen
+N: framebuffer@90001000
+B: framebuffer@90001000
+[EXT DONE] /chosen
+[EXT SCAN] /clocks
+N: sleep-clk
+B: sleep-clk
+N: xo-board
+B: xo-board
+[EXT DONE] /clocks
+[EXT SCAN] /firmware
+N: scm
+[EXT DONE] /firmware
+[EXT SCAN] /reserved-memory
+N: zap@81800000
+N: smem@86300000
+B: smem@86300000
+N: reserved@86400000
+N: mpss@86c00000
+N: adsp@8d600000
+N: dfps-data@90000000
+N: venus@91400000
+N: mba@92000000
+N: rmtfs@f2d00000
+N: lk2nd@8f600000
+N: qseecom@84a00000
+N: wcnss@8e800000
+N: ramoops@bfe80000
+[EXT DONE] /reserved-memory
+[EXT 2] dm_extended_scan completed
+[SCAN 2] dm_scan_other
+B: bootstd
+B: extlinux
+B: script
