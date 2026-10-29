@@ -272,8 +272,11 @@ static inline void append_ts_str(volatile char *data, volatile char *raw, uint32
  */
 void qcom_ramoops_early_log(const char *msg)
 {
-	/* Reset APCS watchdog counter (0x04) and ensure watchdog remains disabled (0x08) */
+	/* Pet APCS watchdog, reprogram Bark/Bite to maximum (18.6 min @ 1.92MHz) and hold disabled */
+	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
+	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
 	*(volatile uint32_t *)0x0b017004ULL = 1;
+	*(volatile uint32_t *)0x0b017008ULL = 1;
 	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
 
@@ -328,8 +331,11 @@ void early_delay_s(uint32_t sec)
 	target = start + (frq * sec);
 	while (1) {
 		uint64_t cur;
-		/* Reset APCS watchdog counter (0x04) and keep disabled (0x08) */
+		/* Pet APCS watchdog, reprogram Bark/Bite to maximum and hold disabled */
+		*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
+		*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
 		*(volatile uint32_t *)0x0b017004ULL = 1;
+		*(volatile uint32_t *)0x0b017008ULL = 1;
 		*(volatile uint32_t *)0x0b017008ULL = 0;
 		asm volatile("dsb sy" ::: "memory");
 		asm volatile("mrs %0, cntpct_el0" : "=r" (cur));
@@ -340,9 +346,15 @@ void early_delay_s(uint32_t sec)
 
 static void qcom_disable_watchdog(void)
 {
-	/* Reset APCS watchdog counter (0x0B017004 is WDT_RST) */
-	*(volatile uint32_t *)0x0b017004ULL = 1;
 	/* Disable APCS watchdog enable bit (0x0B017008 is WDT_EN) */
+	*(volatile uint32_t *)0x0b017008ULL = 0;
+	/* Set Bark time and Bite time to maximum 31-bit value (0x7FFFFFFF = 1,118 seconds = 18.6 minutes) */
+	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
+	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
+	/* Reset / pet watchdog on both 0x04 (Linux WDT_RST) and 0x08 (LK APPS_WDOG_RESET_REG) */
+	*(volatile uint32_t *)0x0b017004ULL = 1;
+	*(volatile uint32_t *)0x0b017008ULL = 1;
+	/* Ensure enable remains 0 */
 	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
 }
@@ -370,15 +382,31 @@ static void log_boot_timestamp(void)
 		 "[BUILD] U-Boot compiled on " U_BOOT_DATE " at " U_BOOT_TIME " UTC\n");
 	qcom_ramoops_early_log(buf);
 
-	/* Read and log hardware APCS watchdog registers */
-	uint32_t wdt_rst  = *(volatile uint32_t *)0x0b017004ULL;
-	uint32_t wdt_en   = *(volatile uint32_t *)0x0b017008ULL;
-	uint32_t wdt_sts  = *(volatile uint32_t *)0x0b01700cULL;
-	uint32_t wdt_bark = *(volatile uint32_t *)0x0b017010ULL;
-	uint32_t wdt_bite = *(volatile uint32_t *)0x0b017014ULL;
+	/* Read hardware APCS watchdog registers BEFORE */
+	uint32_t b_rst  = *(volatile uint32_t *)0x0b017004ULL;
+	uint32_t b_en   = *(volatile uint32_t *)0x0b017008ULL;
+	uint32_t b_sts  = *(volatile uint32_t *)0x0b01700cULL;
+	uint32_t b_bark = *(volatile uint32_t *)0x0b017010ULL;
+	uint32_t b_bite = *(volatile uint32_t *)0x0b017014ULL;
+
+	/* Reprogram & pet */
+	qcom_disable_watchdog();
+
+	/* Read hardware APCS watchdog registers AFTER */
+	uint32_t a_rst  = *(volatile uint32_t *)0x0b017004ULL;
+	uint32_t a_en   = *(volatile uint32_t *)0x0b017008ULL;
+	uint32_t a_sts  = *(volatile uint32_t *)0x0b01700cULL;
+	uint32_t a_bark = *(volatile uint32_t *)0x0b017010ULL;
+	uint32_t a_bite = *(volatile uint32_t *)0x0b017014ULL;
+
 	snprintf(buf, sizeof(buf),
-		 "[WDT REGS] RST(0x04)=0x%08x EN(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
-		 wdt_rst, wdt_en, wdt_sts, wdt_bark, wdt_bite);
+		 "[WDT BEFORE] RST(0x04)=0x%08x EN(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
+		 b_rst, b_en, b_sts, b_bark, b_bite);
+	qcom_ramoops_early_log(buf);
+
+	snprintf(buf, sizeof(buf),
+		 "[WDT AFTER]  RST(0x04)=0x%08x EN(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
+		 a_rst, a_en, a_sts, a_bark, a_bite);
 	qcom_ramoops_early_log(buf);
 }
 
@@ -421,7 +449,7 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v26) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v27) ===\n[0] In board_fdt_blob_setup\n");
 	log_boot_timestamp();
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
 	qcom_ramoops_early_log("[CKPT 0] Splash painted OK\n");

@@ -109,7 +109,10 @@ static void cyclic_run(void)
 void schedule(void)
 {
 	/* Pet APCS watchdog on Qualcomm platforms */
+	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
+	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
 	*(volatile uint32_t *)0x0b017004ULL = 1;
+	*(volatile uint32_t *)0x0b017008ULL = 1;
 	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
 
