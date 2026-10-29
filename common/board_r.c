@@ -550,8 +550,15 @@ static int dm_announce(void)
 	int device_count;
 	int uclass_count;
 
+	qcom_ramoops_early_log("[DM-ANN 0] Inside dm_announce\n");
 	if (IS_ENABLED(CONFIG_DM)) {
+		qcom_ramoops_early_log("[DM-ANN 1] Calling dm_get_stats\n");
 		dm_get_stats(&device_count, &uclass_count);
+		char buf[128];
+		snprintf(buf, sizeof(buf), "[DM-ANN 2] dm_get_stats: %d devices, %d uclasses\n",
+			 device_count, uclass_count);
+		qcom_ramoops_early_log(buf);
+
 		printf("Core:  %d devices, %d uclasses", device_count,
 		       uclass_count);
 		if (CONFIG_IS_ENABLED(OF_REAL))
@@ -566,6 +573,7 @@ static int dm_announce(void)
 			printf("Warning: U-Boot may not function properly\n");
 		}
 	}
+	qcom_ramoops_early_log("[DM-ANN 3] dm_announce completed!\n");
 
 	return 0;
 }
@@ -669,7 +677,20 @@ static void initcall_run_r(void)
 	qcom_ramoops_early_log("[SUB 6] serial_initialize done\n");
 	qcom_ramoops_early_log("[CKPT 6] serial_initialize OK\n");
 	INITCALL(initr_announce);
+
+	/* 4-second delay test requested by user to rule out anomalies at dm_announce */
+	extern void early_delay_s(uint32_t sec);
+	qcom_ramoops_early_log("[TEST] >>> STARTING 4-SECOND DELAY TEST AT DM_ANNOUNCE <<<\n");
+	for (int i = 1; i <= 4; i++) {
+		early_delay_s(1);
+		char delay_buf[64];
+		snprintf(delay_buf, sizeof(delay_buf), "[TEST] Delay tick %d/4s elapsed successfully!\n", i);
+		qcom_ramoops_early_log(delay_buf);
+	}
+	qcom_ramoops_early_log("[TEST] >>> 4-SECOND DELAY COMPLETED! Now calling dm_announce <<<\n");
+
 	INITCALL(dm_announce);
+	qcom_ramoops_early_log("[CKPT 7] dm_announce OK\n");
 #if CONFIG_IS_ENABLED(WDT)
 	INITCALL(initr_watchdog);
 #endif

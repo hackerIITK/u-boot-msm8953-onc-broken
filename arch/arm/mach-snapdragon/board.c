@@ -399,14 +399,14 @@ void qcom_watchdog_pet(void)
 	*(volatile uint32_t *)0x0b017038ULL = 1;
 	*(volatile uint32_t *)0x0b017040ULL = 0;
 
-	/* 2. Legacy KPSS Layout (msm8974 / apq8064 fallback):
-	 * WDT_RST (0x04) = 1
-	 * WDT_EN  (0x08) = 0
+	/* 2. KPSS Layout (msm8953 / msm8952 APCS per GEMINI.md):
+	 * APPS_WDOG_CTL_REG   (0x04) = 0 (keep disabled)
+	 * APPS_WDOG_RESET_REG (0x08) = 1 (reload countdown counter)
 	 */
-	arm_smccc_smc(0x82000502, 2, 0x0b017004, 1, 0, 0, 0, 0, &_res);
-	arm_smccc_smc(0x82000502, 2, 0x0b017008, 0, 0, 0, 0, 0, &_res);
-	*(volatile uint32_t *)0x0b017004ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 0;
+	arm_smccc_smc(0x82000502, 2, 0x0b017004, 0, 0, 0, 0, 0, &_res);
+	arm_smccc_smc(0x82000502, 2, 0x0b017008, 1, 0, 0, 0, 0, &_res);
+	*(volatile uint32_t *)0x0b017004ULL = 0;
+	*(volatile uint32_t *)0x0b017008ULL = 1;
 
 	asm volatile("dsb sy" ::: "memory");
 }
@@ -518,19 +518,21 @@ static void qcom_disable_watchdog(void)
 	*(volatile uint32_t *)0x0b017038ULL = 1;
 	*(volatile uint32_t *)0x0b017040ULL = 0;
 
-	/* 3. Legacy KPSS Watchdog Fallback:
-	 * Disable WDT_EN (0x08 = 0)
-	 * Reset counter WDT_RST (0x04 = 1)
+	/* 3. KPSS Watchdog (MSM8953 / MSM8952 APCS per GEMINI.md):
+	 * APPS_WDOG_CTL_REG   (0x04) = 0 (disable)
+	 * APPS_WDOG_RESET_REG (0x08) = 1 (reload counter)
+	 * APPS_WDOG_BARK_VAL  (0x10) = 0x7FFFFFFF
+	 * APPS_WDOG_BITE_VAL  (0x14) = 0x7FFFFFFF
 	 */
-	qcom_scm_io_write(0x0b017008, 0);
-	qcom_scm_io_write(0x0b017004, 1);
-	qcom_scm_io_write(0x0b017010, 0x000FFFFF);
-	qcom_scm_io_write(0x0b017014, 0x000FFFFF);
+	qcom_scm_io_write(0x0b017004, 0);
+	qcom_scm_io_write(0x0b017008, 1);
+	qcom_scm_io_write(0x0b017010, 0x7FFFFFFF);
+	qcom_scm_io_write(0x0b017014, 0x7FFFFFFF);
 
 	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
 	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
-	*(volatile uint32_t *)0x0b017004ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 0;
+	*(volatile uint32_t *)0x0b017004ULL = 0;
+	*(volatile uint32_t *)0x0b017008ULL = 1;
 	asm volatile("dsb sy" ::: "memory");
 
 	/* 4. SPMI PMIC Watchdog Disarming (500ms S2 Timer) */
@@ -660,7 +662,7 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v38) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v39) ===\n[0] In board_fdt_blob_setup\n");
 	log_boot_timestamp();
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
 	qcom_ramoops_early_log("[CKPT 0] Splash painted OK\n");
