@@ -62,18 +62,6 @@
 		      <0x0 0x80000000 0x0 0x3fe00000>;
 	};
 
-	gpio-keys {
-		compatible = "gpio-keys";
-		pinctrl-names = "default";
-		pinctrl-0 = <&gpio_key_default>;
-
-		key-volume-up {
-			label = "Volume Up";
-			gpios = <&tlmm 85 GPIO_ACTIVE_LOW>;
-			linux,code = <KEY_VOLUMEUP>;
-		};
-	};
-
 	reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
@@ -110,15 +98,6 @@
 	};
 };
 
-&tlmm {
-	gpio_key_default: gpio-key-default-state {
-		pins = "gpio85";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-pull-up;
-	};
-};
-
 &uart_0 {
 	status = "disabled";
 };
@@ -128,7 +107,7 @@
 };
 
 &sdhc_2 {
-	cd-gpios = <&tlmm 133 GPIO_ACTIVE_HIGH>;
+	broken-cd;
 	status = "okay";
 };
 

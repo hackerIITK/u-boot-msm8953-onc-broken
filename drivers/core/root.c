@@ -207,9 +207,9 @@ static int dm_scan_fdt_node(struct udevice *parent, ofnode parent_node,
 	     node = ofnode_next_subnode(node)) {
 		const char *node_name = ofnode_get_name(node);
 
-		/* Pet APCS hardware watchdog on every single DT node */
-		*(volatile uint32_t *)0x0b017004ULL = 1;
+		/* Reset APCS hardware watchdog and clear enable bit */
 		*(volatile uint32_t *)0x0b017008ULL = 1;
+		*(volatile uint32_t *)0x0b017004ULL = 0;
 		asm volatile("dsb sy" ::: "memory");
 
 		if (!ofnode_is_enabled(node)) {

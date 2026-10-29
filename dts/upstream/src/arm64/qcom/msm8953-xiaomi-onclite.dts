@@ -29,6 +29,8 @@
 
 	aliases {
 		serial0 = &serial_null;
+		mmc0 = &sdhc_1;
+		mmc1 = &sdhc_2;
 	};
 
 	serial_null: serial-null {
@@ -40,7 +42,7 @@
 		#size-cells = <2>;
 		ranges;
 
-		stdout-path = "serial0:115200n8";
+		stdout-path = "framebuffer0";
 
 		framebuffer0: framebuffer@90001000 {
 			compatible = "simple-framebuffer";
@@ -58,18 +60,6 @@
 		device_type = "memory";
 		reg = <0x0 0x40000000 0x0 0x40000000>,
 		      <0x0 0x80000000 0x0 0x3fe00000>;
-	};
-
-	gpio-keys {
-		compatible = "gpio-keys";
-		pinctrl-names = "default";
-		pinctrl-0 = <&gpio_key_default>;
-
-		key-volume-up {
-			label = "Volume Up";
-			gpios = <&tlmm 85 GPIO_ACTIVE_LOW>;
-			linux,code = <KEY_VOLUMEUP>;
-		};
 	};
 
 	reserved-memory {
@@ -108,29 +98,19 @@
 	};
 };
 
-/delete-node/ &cont_splash_mem;
-
-&tlmm {
-	gpio_key_default: gpio-key-default-state {
-		pins = "gpio85";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-pull-up;
-	};
-};
-
 &uart_0 {
 	status = "disabled";
 };
 
 &sdhc_1 {
-	status = "disabled";
+	status = "okay";
 };
 
 &sdhc_2 {
-	status = "disabled";
+	broken-cd;
+	status = "okay";
 };
 
 &usb3 {
-	status = "disabled";
+	status = "okay";
 };
