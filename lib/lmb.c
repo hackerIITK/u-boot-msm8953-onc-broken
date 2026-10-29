@@ -856,21 +856,27 @@ static int lmb_setup(bool test)
 int lmb_init(void)
 {
 	int ret;
+	extern void qcom_ramoops_early_log(const char *msg);
 
+	qcom_ramoops_early_log("LMB: calling lmb_setup\n");
 	ret = lmb_setup(false);
 	if (ret) {
+		qcom_ramoops_early_log("LMB: lmb_setup failed\n");
 		log_info("Unable to init LMB\n");
 		return ret;
 	}
 
+	qcom_ramoops_early_log("LMB: calling lmb_add_memory\n");
 	lmb_add_memory();
 
+	qcom_ramoops_early_log("LMB: calling lmb_reserve_common\n");
 	/* Reserve the U-Boot image region once U-Boot has relocated */
 	if (xpl_phase() == PHASE_SPL)
 		lmb_reserve_common_spl();
 	else if (xpl_phase() == PHASE_BOARD_R)
 		lmb_reserve_common((void *)gd->fdt_blob);
 
+	qcom_ramoops_early_log("LMB: lmb_reserve_common done\n");
 	return 0;
 }
 

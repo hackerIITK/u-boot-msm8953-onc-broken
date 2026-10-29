@@ -549,10 +549,14 @@ int initr_mem(void)
 
 static int initr_lmb(void)
 {
-	if (CONFIG_IS_ENABLED(LMB))
-		return lmb_init();
-	else
+	qcom_ramoops_early_log("LMB: enter initr_lmb\n");
+	if (CONFIG_IS_ENABLED(LMB)) {
+		int ret = lmb_init();
+		qcom_ramoops_early_log("LMB: lmb_init returned\n");
+		return ret;
+	} else {
 		return 0;
+	}
 }
 
 static int dm_announce(void)
@@ -816,6 +820,7 @@ void board_init_r(gd_t *new_gd, ulong dest_addr)
 	 * Do the same with log drivers since the memory may not be available.
 	 */
 	gd->flags &= ~(GD_FLG_SERIAL_READY | GD_FLG_LOG_READY);
+	gd->cur_serial_dev = NULL;
 
 	/*
 	 * Set up the new global data pointer. So far only x86 does this

@@ -386,13 +386,13 @@ static int _serial_tstc(struct udevice *dev)
 
 void serial_putc(char ch)
 {
-	if (gd->cur_serial_dev)
+	if (gd->cur_serial_dev && (gd->flags & GD_FLG_SERIAL_READY))
 		_serial_putc(gd->cur_serial_dev, ch);
 }
 
 void serial_puts(const char *str)
 {
-	if (gd->cur_serial_dev)
+	if (gd->cur_serial_dev && (gd->flags & GD_FLG_SERIAL_READY))
 		_serial_puts(gd->cur_serial_dev, str);
 }
 
