@@ -326,9 +326,10 @@ static void spmi_pon_init(void)
 	spmi_pon_channels_count = 0;
 	for (int i = 0; i < 128; i++) {
 		uint32_t val = *(volatile uint32_t *)SPMI_APID_MAP(i);
+		uint32_t sid = (val >> 16) & 0xF;
 		uint32_t pid = (val >> 8) & 0xFF;
-		/* PON peripheral is PID 0x08 on any PMIC slave (PM8953 = sid 0, PMI = sid 2) */
-		if (pid == 0x08) {
+		/* PON peripheral is PID 0x08 on real PMIC slaves ONLY (PM8953=sid 0, PMI8952=sid 2) */
+		if (pid == 0x08 && (sid == 0 || sid == 2)) {
 			if (spmi_pon_channels_count < 4) {
 				spmi_pon_channels[spmi_pon_channels_count++] = i;
 			}
@@ -393,7 +394,6 @@ void qcom_watchdog_pet(void)
 	*(volatile uint32_t *)0x0b017004ULL = 1;
 	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
-	qcom_pmic_watchdog_pet();
 }
 
 void qcom_ramoops_early_log(const char *msg)
@@ -612,7 +612,7 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v31) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v32) ===\n[0] In board_fdt_blob_setup\n");
 	log_boot_timestamp();
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
 	qcom_ramoops_early_log("[CKPT 0] Splash painted OK\n");

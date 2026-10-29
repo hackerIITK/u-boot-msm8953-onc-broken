@@ -578,6 +578,8 @@ U_BOOT_ENV_CALLBACK(baudrate, on_baudrate);
 #if CONFIG_IS_ENABLED(SERIAL_PRESENT)
 static int serial_post_probe(struct udevice *dev)
 {
+	extern void qcom_ramoops_early_log(const char *msg);
+	qcom_ramoops_early_log("SERIAL: post_probe start\n");
 	struct dm_serial_ops *ops = serial_get_ops(dev);
 #if CONFIG_IS_ENABLED(DM_STDIO)
 	struct serial_dev_priv *upriv = dev_get_uclass_priv(dev);
@@ -587,14 +589,17 @@ static int serial_post_probe(struct udevice *dev)
 
 	/* Set the baud rate */
 	if (ops->setbrg) {
+		qcom_ramoops_early_log("SERIAL: post_probe calling setbrg\n");
 		ret = ops->setbrg(dev, gd->baudrate);
 		if (ret)
 			return ret;
 	}
 
 #if CONFIG_IS_ENABLED(DM_STDIO)
-	if (!(gd->flags & GD_FLG_RELOC))
+	if (!(gd->flags & GD_FLG_RELOC)) {
+		qcom_ramoops_early_log("SERIAL: post_probe pre-reloc return\n");
 		return 0;
+	}
 	memset(&sdev, '\0', sizeof(sdev));
 
 	strlcpy(sdev.name, dev->name, sizeof(sdev.name));
@@ -606,8 +611,10 @@ static int serial_post_probe(struct udevice *dev)
 	sdev.getc = serial_stub_getc;
 	sdev.tstc = serial_stub_tstc;
 
-	stdio_register_dev(&sdev, &upriv->sdev);
+	qcom_ramoops_early_log("SERIAL: post_probe registering stdio\n");
+	stdio_register_dev(&sdev, upriv ? &upriv->sdev : NULL);
 #endif
+	qcom_ramoops_early_log("SERIAL: post_probe done\n");
 	return 0;
 }
 

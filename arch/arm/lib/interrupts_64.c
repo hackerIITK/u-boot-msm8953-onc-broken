@@ -159,6 +159,8 @@ static void ramoops_log_hex(const char *prefix, unsigned long val)
 	qcom_ramoops_early_log(buf);
 }
 
+static int in_abort_handler;
+
 /*
  * do_bad_sync handles the impossible case in the Synchronous Abort vector.
  */
@@ -168,6 +170,10 @@ void do_bad_sync(struct pt_regs *pt_regs)
 	ramoops_log_hex("  ELR: ", pt_regs->elr);
 	ramoops_log_hex("  ESR: ", pt_regs->esr);
 	ramoops_log_hex("  LR : ", pt_regs->regs[30]);
+	if (in_abort_handler++) {
+		qcom_ramoops_early_log("[ABORT] Recursive fault caught! Halting CPU.\n");
+		while (1) { asm volatile("wfe"); }
+	}
 	efi_restore_gd();
 	printf("Bad mode in \"Synchronous Abort\" handler, esr 0x%08lx\n",
 	       pt_regs->esr);
@@ -233,6 +239,10 @@ void do_sync(struct pt_regs *pt_regs)
 	ramoops_log_hex("  ELR: ", pt_regs->elr);
 	ramoops_log_hex("  ESR: ", pt_regs->esr);
 	ramoops_log_hex("  LR : ", pt_regs->regs[30]);
+	if (in_abort_handler++) {
+		qcom_ramoops_early_log("[ABORT] Recursive fault caught! Halting CPU.\n");
+		while (1) { asm volatile("wfe"); }
+	}
 	efi_restore_gd();
 	printf("\"Synchronous Abort\" handler, esr 0x%08lx", pt_regs->esr);
 	dump_far(pt_regs->esr);
@@ -283,6 +293,10 @@ void __weak do_error(struct pt_regs *pt_regs)
 	qcom_ramoops_early_log("[ABORT] SError / Asynchronous Exception!\n");
 	ramoops_log_hex("  ELR: ", pt_regs->elr);
 	ramoops_log_hex("  ESR: ", pt_regs->esr);
+	if (in_abort_handler++) {
+		qcom_ramoops_early_log("[ABORT] Recursive fault in do_error! Halting CPU.\n");
+		while (1) { asm volatile("wfe"); }
+	}
 	efi_restore_gd();
 	printf("\"Error\" handler, esr 0x%08lx\n", pt_regs->esr);
 	show_regs(pt_regs);
