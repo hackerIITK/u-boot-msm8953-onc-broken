@@ -427,7 +427,7 @@ void serial_setbrg(void)
 	struct dm_serial_ops *ops;
 
 	*(volatile uint32_t *)0x0b017004ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 1;
+	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
 
 	if (!gd->cur_serial_dev)
@@ -438,7 +438,7 @@ void serial_setbrg(void)
 		ops->setbrg(gd->cur_serial_dev, gd->baudrate);
 
 	*(volatile uint32_t *)0x0b017004ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 1;
+	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
 }
 

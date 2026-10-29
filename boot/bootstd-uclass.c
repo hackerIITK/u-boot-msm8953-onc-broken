@@ -17,6 +17,7 @@
 #include <dm/lists.h>
 #include <dm/read.h>
 #include <dm/uclass-internal.h>
+#include <u-boot/schedule.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -197,6 +198,7 @@ int dm_scan_other(bool pre_reloc_only)
 		return 0;
 
 	for (i = 0; i < n_ents; i++, drv++) {
+		schedule();
 		if (drv->id == UCLASS_BOOTMETH) {
 			const char *name = drv->name;
 
