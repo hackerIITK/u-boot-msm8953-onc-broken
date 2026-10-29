@@ -38,7 +38,7 @@ static void ramoops_stdio_puts(struct stdio_dev *dev, const char *s)
 
 static int register_ramoops_stdio(void)
 {
-	struct stdio_dev dev;
+	static struct stdio_dev dev;
 
 	memset(&dev, 0, sizeof(dev));
 	strcpy(dev.name, "ramoops");
@@ -88,14 +88,17 @@ int qcom_late_init(void)
 
 	memset(serial, 0, sizeof(serial));
 	snprintf(serial, sizeof(serial), "%08x", msm8953_board_serial());
+	qcom_ramoops_early_log("[4.1] Setting serial#, board_name, soc_name env\n");
 	env_set("serial#", serial);
 	env_set("board_name", "onclite");
 	env_set("soc_name", "msm8953");
 
+	qcom_ramoops_early_log("[4.2] Checking ethaddr\n");
 	if (!eth_env_get_enetaddr("ethaddr", mac)) {
 		msm8953_generate_mac_addr(mac);
 		eth_env_set_enetaddr("ethaddr", mac);
 	}
+	qcom_ramoops_early_log("[4.3] qcom_late_init OK!\n");
 
 	return 0;
 }

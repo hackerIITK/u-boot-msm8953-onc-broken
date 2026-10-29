@@ -46,10 +46,14 @@ void main_loop(void)
 
 	bootstage_mark_name(BOOTSTAGE_ID_MAIN_LOOP, "main_loop");
 
+	extern void qcom_ramoops_early_log(const char *msg);
+	qcom_ramoops_early_log("[SHELL 100] In main_loop()! U-BOOT FULLY BOOTED!\n");
+
 	if (IS_ENABLED(CONFIG_VERSION_VARIABLE))
 		env_set("ver", version_string);  /* set version variable */
 
 	cli_init();
+	qcom_ramoops_early_log("[SHELL 101] cli_init done!\n");
 
 	if (IS_ENABLED(CONFIG_USE_PREBOOT))
 		run_preboot_environment_command();

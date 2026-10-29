@@ -660,7 +660,7 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v37) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v38) ===\n[0] In board_fdt_blob_setup\n");
 	log_boot_timestamp();
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
 	qcom_ramoops_early_log("[CKPT 0] Splash painted OK\n");
@@ -1036,15 +1036,19 @@ int board_late_init(void)
 		memcpy((void *)addr, (void *)gd->fdt_blob,
 		       fdt32_to_cpu(fdt_blob->totalsize));
 
+	qcom_ramoops_early_log("[BLATE 1] configure_env start\n");
 	configure_env();
+	qcom_ramoops_early_log("[BLATE 2] configure_env done, calling qcom_late_init\n");
 	qcom_late_init();
-
+	qcom_ramoops_early_log("[BLATE 3] qcom_late_init done, calling qcom_show_boot_source\n");
 	qcom_show_boot_source();
+	qcom_ramoops_early_log("[BLATE 4] qcom_show_boot_source done\n");
 	/* Configure the dfu_string for capsule updates (skip on msm8953) */
 	if (fdt_node_check_compatible(gd->fdt_blob, 0, "qcom,msm8953") != 0 &&
 	    fdt_node_check_compatible(gd->fdt_blob, 0, "qcom,sdm632") != 0)
 		qcom_configure_capsule_updates();
 
+	qcom_ramoops_early_log("[BLATE 5] board_late_init finished OK!\n");
 	return 0;
 }
 

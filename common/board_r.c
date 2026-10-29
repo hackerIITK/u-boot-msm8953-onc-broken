@@ -776,6 +776,7 @@ static void initcall_run_r(void)
 	qcom_ramoops_early_log("[SUB 8] board_late_init done\n");
 	qcom_ramoops_early_log("[CKPT 10] board_late_init OK\n");
 #endif
+	qcom_ramoops_early_log("[SUB 8.1] After board_late_init\n");
 #if CONFIG_IS_ENABLED(PCI_ENDPOINT)
 	INITCALL(pci_ep_init);
 #endif
@@ -787,7 +788,9 @@ static void initcall_run_r(void)
 	INITCALL(initr_post);
 #endif
 	WATCHDOG_RESET();
+	qcom_ramoops_early_log("[SUB 8.2] Calling EVT_LAST_STAGE_INIT\n");
 	INITCALL_EVT(EVT_LAST_STAGE_INIT);
+	qcom_ramoops_early_log("[SUB 8.3] After EVT_LAST_STAGE_INIT\n");
 #if defined(CFG_PRAM)
 	INITCALL(initr_mem);
 #endif
