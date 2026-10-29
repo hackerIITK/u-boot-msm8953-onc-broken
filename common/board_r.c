@@ -269,13 +269,11 @@ static int initr_dm(void)
 	gd->timer = NULL;
 #endif
 	bootstage_start(BOOTSTAGE_ID_ACCUM_DM_R, "dm_r");
-	qcom_ramoops_early_log("[CKPT 1] Before dm_init_and_scan (2s delay)...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 1] Before dm_init_and_scan\n");
 	qcom_ramoops_early_log("[DM 1] dm_init_and_scan start\n");
 	ret = dm_init_and_scan(false);
 	qcom_ramoops_early_log("[DM 2] dm_init_and_scan done\n");
-	qcom_ramoops_early_log("[CKPT 2] dm_init_and_scan done (2s delay)...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 2] dm_init_and_scan OK\n");
 	bootstage_accum(BOOTSTAGE_ID_ACCUM_DM_R);
 	if (ret)
 		return ret;
@@ -283,8 +281,7 @@ static int initr_dm(void)
 	qcom_ramoops_early_log("[DM 3] dm_autoprobe start\n");
 	ret = dm_autoprobe();
 	qcom_ramoops_early_log("[DM 4] dm_autoprobe done\n");
-	qcom_ramoops_early_log("[CKPT 3] dm_autoprobe done (2s delay)...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 3] dm_autoprobe OK\n");
 	return ret;
 }
 #endif
@@ -651,8 +648,7 @@ static void initcall_run_r(void)
 #if CONFIG_IS_ENABLED(BOARD_INIT)
 	INITCALL(board_init);	/* Setup chipselects */
 	qcom_ramoops_early_log("[MAJOR 2] board_init done\n");
-	qcom_ramoops_early_log("[CKPT 4] board_init done (2s delay)...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 4] board_init OK\n");
 #endif
 	/*
 	 * TODO: printing of the clock inforamtion of the board is now
@@ -676,14 +672,12 @@ static void initcall_run_r(void)
 #endif
 	INITCALL(initr_dm_devices);
 	qcom_ramoops_early_log("[SUB 5] initr_dm_devices done\n");
-	qcom_ramoops_early_log("[CKPT 5] initr_dm_devices done (2s delay)...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 5] initr_dm_devices OK\n");
 	INITCALL(stdio_init_tables);
 	qcom_ramoops_early_log("[R 4] stdio_init_tables done\n");
 	INITCALL(serial_initialize);
 	qcom_ramoops_early_log("[SUB 6] serial_initialize done\n");
-	qcom_ramoops_early_log("[CKPT 6] serial_initialize done (2s delay)...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 6] serial_initialize OK\n");
 	INITCALL(initr_announce);
 	INITCALL(dm_announce);
 #if CONFIG_IS_ENABLED(WDT)
@@ -738,8 +732,7 @@ static void initcall_run_r(void)
 #endif
 	INITCALL(initr_env);
 	qcom_ramoops_early_log("[SUB 7] initr_env done\n");
-	qcom_ramoops_early_log("[CKPT 7] initr_env done (2s delay)...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 7] initr_env OK\n");
 #if CONFIG_IS_ENABLED(SYS_MALLOC_BOOTPARAMS)
 	INITCALL(initr_malloc_bootparams);
 #endif
@@ -758,16 +751,14 @@ static void initcall_run_r(void)
 #endif
 	INITCALL(stdio_add_devices);
 	qcom_ramoops_early_log("[MAJOR 3] stdio_add_devices done (video probed)\n");
-	qcom_ramoops_early_log("[CKPT 8] stdio_add_devices done (2s delay)...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 8] stdio_add_devices OK\n");
 	INITCALL(jumptable_init);
 #if CONFIG_IS_ENABLED(API)
 	INITCALL(api_init);
 #endif
 	INITCALL(console_init_r);	/* fully init console as a device */
 	qcom_ramoops_early_log("[MAJOR 4] console_init_r done (VIDCONSOLE ACTIVE)\n");
-	qcom_ramoops_early_log("[CKPT 9] console_init_r done (2s delay)...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 9] console_init_r OK\n");
 #if CONFIG_IS_ENABLED(DISPLAY_BOARDINFO_LATE)
 	INITCALL(console_announce_r);
 	INITCALL(show_board_info);
@@ -793,8 +784,7 @@ static void initcall_run_r(void)
 #if CONFIG_IS_ENABLED(BOARD_LATE_INIT)
 	INITCALL(board_late_init);
 	qcom_ramoops_early_log("[SUB 8] board_late_init done\n");
-	qcom_ramoops_early_log("[CKPT 10] board_late_init done (2s delay)...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 10] board_late_init OK\n");
 #endif
 #if CONFIG_IS_ENABLED(PCI_ENDPOINT)
 	INITCALL(pci_ep_init);

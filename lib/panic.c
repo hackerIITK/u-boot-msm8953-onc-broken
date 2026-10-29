@@ -18,8 +18,11 @@
 
 static void panic_finish(void) __attribute__ ((noreturn));
 
+__weak void qcom_ramoops_early_log(const char *msg) {}
+
 static void panic_finish(void)
 {
+	qcom_ramoops_early_log("[PANIC] System panic occurred! Resetting CPU...\n");
 	putc('\n');
 #if defined(CONFIG_PANIC_HANG)
 	hang();

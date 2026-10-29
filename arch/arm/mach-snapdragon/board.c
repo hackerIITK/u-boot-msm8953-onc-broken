@@ -335,10 +335,9 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v18) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v19) ===\n[0] In board_fdt_blob_setup\n");
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
-	qcom_ramoops_early_log("[CKPT 0] Splash delay 2s...\n");
-	early_delay_s(2);
+	qcom_ramoops_early_log("[CKPT 0] Splash painted OK\n");
 
 	internal_fdt = (struct fdt_header *)*fdtp;
 	external_fdt = (struct fdt_header *)get_prev_bl_fdt_addr();

@@ -140,11 +140,34 @@ static bool smh_emulate_trap(struct pt_regs *regs)
 	return true;
 }
 
+__weak void qcom_ramoops_early_log(const char *msg) {}
+
+static void ramoops_log_hex(const char *prefix, unsigned long val)
+{
+	char buf[48];
+	int i = 0;
+	while (*prefix && i < 20)
+		buf[i++] = *prefix++;
+	buf[i++] = '0';
+	buf[i++] = 'x';
+	for (int shift = 60; shift >= 0; shift -= 4) {
+		int nib = (val >> shift) & 0xF;
+		buf[i++] = (nib < 10) ? ('0' + nib) : ('a' + nib - 10);
+	}
+	buf[i++] = '\n';
+	buf[i] = '\0';
+	qcom_ramoops_early_log(buf);
+}
+
 /*
  * do_bad_sync handles the impossible case in the Synchronous Abort vector.
  */
 void do_bad_sync(struct pt_regs *pt_regs)
 {
+	qcom_ramoops_early_log("[ABORT] Bad Sync Abort!\n");
+	ramoops_log_hex("  ELR: ", pt_regs->elr);
+	ramoops_log_hex("  ESR: ", pt_regs->esr);
+	ramoops_log_hex("  LR : ", pt_regs->regs[30]);
 	efi_restore_gd();
 	printf("Bad mode in \"Synchronous Abort\" handler, esr 0x%08lx\n",
 	       pt_regs->esr);
@@ -158,6 +181,9 @@ void do_bad_sync(struct pt_regs *pt_regs)
  */
 void do_bad_irq(struct pt_regs *pt_regs)
 {
+	qcom_ramoops_early_log("[ABORT] Bad IRQ!\n");
+	ramoops_log_hex("  ELR: ", pt_regs->elr);
+	ramoops_log_hex("  ESR: ", pt_regs->esr);
 	efi_restore_gd();
 	printf("Bad mode in \"Irq\" handler, esr 0x%08lx\n", pt_regs->esr);
 	show_regs(pt_regs);
@@ -170,6 +196,9 @@ void do_bad_irq(struct pt_regs *pt_regs)
  */
 void do_bad_fiq(struct pt_regs *pt_regs)
 {
+	qcom_ramoops_early_log("[ABORT] Bad FIQ!\n");
+	ramoops_log_hex("  ELR: ", pt_regs->elr);
+	ramoops_log_hex("  ESR: ", pt_regs->esr);
 	efi_restore_gd();
 	printf("Bad mode in \"Fiq\" handler, esr 0x%08lx\n", pt_regs->esr);
 	show_regs(pt_regs);
@@ -182,6 +211,9 @@ void do_bad_fiq(struct pt_regs *pt_regs)
  */
 void do_bad_error(struct pt_regs *pt_regs)
 {
+	qcom_ramoops_early_log("[ABORT] Bad Error / SError!\n");
+	ramoops_log_hex("  ELR: ", pt_regs->elr);
+	ramoops_log_hex("  ESR: ", pt_regs->esr);
 	efi_restore_gd();
 	printf("Bad mode in \"Error\" handler, esr 0x%08lx\n", pt_regs->esr);
 	show_regs(pt_regs);
@@ -197,6 +229,10 @@ void do_sync(struct pt_regs *pt_regs)
 	if (CONFIG_IS_ENABLED(SEMIHOSTING_FALLBACK) &&
 	    smh_emulate_trap(pt_regs))
 		return;
+	qcom_ramoops_early_log("[ABORT] Synchronous Abort!\n");
+	ramoops_log_hex("  ELR: ", pt_regs->elr);
+	ramoops_log_hex("  ESR: ", pt_regs->esr);
+	ramoops_log_hex("  LR : ", pt_regs->regs[30]);
 	efi_restore_gd();
 	printf("\"Synchronous Abort\" handler, esr 0x%08lx", pt_regs->esr);
 	dump_far(pt_regs->esr);
@@ -211,6 +247,9 @@ void do_sync(struct pt_regs *pt_regs)
  */
 void do_irq(struct pt_regs *pt_regs)
 {
+	qcom_ramoops_early_log("[ABORT] IRQ Exception!\n");
+	ramoops_log_hex("  ELR: ", pt_regs->elr);
+	ramoops_log_hex("  ESR: ", pt_regs->esr);
 	efi_restore_gd();
 	printf("\"Irq\" handler, esr 0x%08lx\n", pt_regs->esr);
 	show_regs(pt_regs);
@@ -223,6 +262,9 @@ void do_irq(struct pt_regs *pt_regs)
  */
 void do_fiq(struct pt_regs *pt_regs)
 {
+	qcom_ramoops_early_log("[ABORT] FIQ Exception!\n");
+	ramoops_log_hex("  ELR: ", pt_regs->elr);
+	ramoops_log_hex("  ESR: ", pt_regs->esr);
 	efi_restore_gd();
 	printf("\"Fiq\" handler, esr 0x%08lx\n", pt_regs->esr);
 	show_regs(pt_regs);
@@ -238,6 +280,9 @@ void do_fiq(struct pt_regs *pt_regs)
  */
 void __weak do_error(struct pt_regs *pt_regs)
 {
+	qcom_ramoops_early_log("[ABORT] SError / Asynchronous Exception!\n");
+	ramoops_log_hex("  ELR: ", pt_regs->elr);
+	ramoops_log_hex("  ESR: ", pt_regs->esr);
 	efi_restore_gd();
 	printf("\"Error\" handler, esr 0x%08lx\n", pt_regs->esr);
 	show_regs(pt_regs);
