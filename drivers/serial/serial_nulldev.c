@@ -8,6 +8,9 @@
 
 static int nulldev_serial_setbrg(struct udevice *dev, int baudrate)
 {
+	*(volatile uint32_t *)0x0b017004ULL = 1;
+	*(volatile uint32_t *)0x0b017008ULL = 1;
+	asm volatile("dsb sy" ::: "memory");
 	return 0;
 }
 
