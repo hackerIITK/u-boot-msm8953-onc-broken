@@ -277,16 +277,11 @@ static int initr_dm(void)
 	qcom_ramoops_early_log("[CKPT 1] Before dm_init_and_scan\n");
 	qcom_ramoops_early_log("[DM 1] dm_init_and_scan start\n");
 
-	/* 4-second delay test to distinguish hardware watchdog bite vs software driver crash */
+	/* 1-second delay at [DM 1] */
 	extern void early_delay_s(uint32_t sec);
-	qcom_ramoops_early_log("[TEST] >>> STARTING 4-SECOND DELAY TEST AT DM 1 <<<\n");
-	for (int i = 1; i <= 4; i++) {
-		early_delay_s(1);
-		char delay_buf[64];
-		snprintf(delay_buf, sizeof(delay_buf), "[TEST] Delay tick %d/4s elapsed successfully!\n", i);
-		qcom_ramoops_early_log(delay_buf);
-	}
-	qcom_ramoops_early_log("[TEST] >>> 4-SECOND DELAY COMPLETED! Now entering dm_init_and_scan <<<\n");
+	qcom_ramoops_early_log("[TEST] Entering 1s delay at [DM 1]\n");
+	early_delay_s(1);
+	qcom_ramoops_early_log("[TEST] 1s delay at [DM 1] done!\n");
 
 	ret = dm_init_and_scan(false);
 	qcom_ramoops_early_log("[DM 2] dm_init_and_scan done\n");

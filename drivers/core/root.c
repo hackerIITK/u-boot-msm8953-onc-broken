@@ -32,6 +32,8 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+extern void qcom_ramoops_early_log(const char *msg);
+
 static const struct driver_info root_info = {
 	.name		= "root_driver",
 };
@@ -216,6 +218,12 @@ static int dm_scan_fdt_node(struct udevice *parent, ofnode parent_node,
 			continue;
 		}
 
+		if (!pre_reloc_only) {
+			char nbuf[96];
+			snprintf(nbuf, sizeof(nbuf), "  [BIND] %s\n", node_name ? node_name : "?");
+			qcom_ramoops_early_log(nbuf);
+		}
+
 		err = lists_bind_fdt(parent, node, NULL, NULL, pre_reloc_only);
 		if (err && !ret) {
 			ret = err;
@@ -380,6 +388,12 @@ static int dm_scan(bool pre_reloc_only)
 	}
 
 	qcom_ramoops_early_log("[SCAN 2] dm_scan_other\n");
+	if (!pre_reloc_only) {
+		extern void early_delay_s(uint32_t sec);
+		qcom_ramoops_early_log("[TEST] Entering 2s delay at [SCAN 2] before dm_scan_other\n");
+		early_delay_s(2);
+		qcom_ramoops_early_log("[TEST] 2s delay completed OK at [SCAN 2]!\n");
+	}
 	ret = dm_scan_other(pre_reloc_only);
 	qcom_ramoops_early_log("[SCAN 3] dm_scan_other done\n");
 	if (ret)
