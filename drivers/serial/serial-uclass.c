@@ -426,20 +426,17 @@ void serial_setbrg(void)
 {
 	struct dm_serial_ops *ops;
 
-	*(volatile uint32_t *)0x0b017004ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 0;
-	asm volatile("dsb sy" ::: "memory");
-
-	if (!gd->cur_serial_dev)
+	if (!gd->cur_serial_dev) {
+		qcom_ramoops_early_log("SERIAL: cur_serial_dev is NULL\n");
 		return;
+	}
 
 	ops = serial_get_ops(gd->cur_serial_dev);
-	if (ops && ops->setbrg)
+	if (ops && ops->setbrg) {
+		qcom_ramoops_early_log("SERIAL: calling dev setbrg\n");
 		ops->setbrg(gd->cur_serial_dev, gd->baudrate);
-
-	*(volatile uint32_t *)0x0b017004ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 0;
-	asm volatile("dsb sy" ::: "memory");
+		qcom_ramoops_early_log("SERIAL: dev setbrg done\n");
+	}
 }
 
 int serial_getconfig(struct udevice *dev, uint *config)
