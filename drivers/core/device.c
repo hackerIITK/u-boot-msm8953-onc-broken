@@ -80,6 +80,13 @@ static int device_bind_common(struct udevice *parent, const struct driver *drv,
 	dev->driver = drv;
 	dev->uclass = uc;
 
+	if (name) {
+		extern void qcom_ramoops_early_log(const char *msg);
+		qcom_ramoops_early_log("B: ");
+		qcom_ramoops_early_log(name);
+		qcom_ramoops_early_log("\n");
+	}
+
 	dev->seq_ = -1;
 	if (CONFIG_IS_ENABLED(DM_SEQ_ALIAS) &&
 	    (uc->uc_drv->flags & DM_UC_FLAG_SEQ_ALIAS)) {
@@ -486,12 +493,17 @@ int device_probe(struct udevice *dev)
 {
 	const struct driver *drv;
 	int ret;
+	extern void qcom_ramoops_early_log(const char *msg);
 
 	if (!dev)
 		return -EINVAL;
 
 	if (dev_get_flags(dev) & DM_FLAG_ACTIVATED)
 		return 0;
+
+	qcom_ramoops_early_log("P: ");
+	qcom_ramoops_early_log(dev->name ? dev->name : "(anon)");
+	qcom_ramoops_early_log("\n");
 
 	ret = device_notify(dev, EVT_DM_PRE_PROBE);
 	if (ret)

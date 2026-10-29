@@ -1,0 +1,136 @@
+// SPDX-License-Identifier: BSD-3-Clause
+/*
+ * Copyright (c) 2026 Antigravity Embedded Systems
+ * Target: Xiaomi Redmi 7 (onclite / onc)
+ * SoC: Qualcomm MSM8953 / Snapdragon 632 (SDM632)
+ */
+/dts-v1/;
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include "msm8953.dtsi"
+#include "pm8953.dtsi"
+#include "pmi8950.dtsi"
+
+/delete-node/ &adsp_fw_mem;
+/delete-node/ &qseecom_mem;
+/delete-node/ &wcnss_fw_mem;
+/delete-node/ &{/memory@10000000};
+/delete-node/ &{/psci};
+
+/ {
+	model = "Xiaomi Redmi 7 (onclite)";
+	compatible = "xiaomi,onclite", "qcom,msm8953", "qcom,sdm632";
+	chassis-type = "handset";
+
+	qcom,msm-id = <293 0>, <349 0>, <0x15d 0>;
+	qcom,board-id = <0x08 0x00>, <0x1000b 0x9>;
+	qcom,pmic-id = <0x10016 0x25 0x00 0x00>;
+
+	aliases {
+		serial0 = &serial_null;
+	};
+
+	serial_null: serial-null {
+		compatible = "nulldev-serial";
+	};
+
+	chosen {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		stdout-path = "serial0:115200n8";
+
+		framebuffer0: framebuffer@90001000 {
+			compatible = "simple-framebuffer";
+			reg = <0 0x90001000 0 (720 * 1520 * 4)>;
+
+			width = <720>;
+			height = <1520>;
+			stride = <(720 * 4)>;
+			format = "x8r8g8b8";
+		};
+	};
+
+	/* Physical DRAM Layout: 1 GiB Bank 0 + High RAM Bank 1 capped below Ramoops/QSEE */
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x0 0x40000000 0x0 0x40000000>,
+		      <0x0 0x80000000 0x0 0x3fe00000>;
+	};
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_key_default>;
+
+		key-volume-up {
+			label = "Volume Up";
+			gpios = <&tlmm 85 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_VOLUMEUP>;
+		};
+	};
+
+	reserved-memory {
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges;
+
+		/* Bootloader carveouts */
+		lk2nd_mem: lk2nd@8f600000 {
+			reg = <0x0 0x8f600000 0x0 0x00a00000>;
+			no-map;
+		};
+
+		qseecom_mem: qseecom@84a00000 {
+			reg = <0x0 0x84a00000 0x0 0x1900000>;
+			no-map;
+		};
+
+		adsp_fw_mem: adsp@8d600000 {
+			reg = <0x0 0x8d600000 0x0 0x1200000>;
+			no-map;
+		};
+
+		wcnss_fw_mem: wcnss@8e800000 {
+			reg = <0x0 0x8e800000 0x0 0x700000>;
+			no-map;
+		};
+
+		ramoops: ramoops@bfe80000 {
+			compatible = "ramoops";
+			reg = <0x0 0xbfe80000 0x0 0x80000>;
+			record-size = <0x2000>;
+			console-size = <0x40000>;
+			dump-size = <0x40000>;
+		};
+	};
+};
+
+/delete-node/ &cont_splash_mem;
+
+&tlmm {
+	gpio_key_default: gpio-key-default-state {
+		pins = "gpio85";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+};
+
+&uart_0 {
+	status = "disabled";
+};
+
+&sdhc_1 {
+	status = "disabled";
+};
+
+&sdhc_2 {
+	status = "disabled";
+};
+
+&usb3 {
+	status = "disabled";
+};

@@ -28,6 +28,8 @@
 #include <linux/sizes.h>
 #include <lmb.h>
 #include <malloc.h>
+
+void qcom_ramoops_early_log(const char *msg);
 #include <fdt_support.h>
 #include <usb.h>
 #include <sort.h>
@@ -158,9 +160,21 @@ static int qcom_parse_memory(const void *fdt)
 	return 0;
 }
 
+phys_addr_t board_get_usable_ram_top(phys_size_t total_size)
+{
+	if (gd->ram_top > 0xBFE00000ULL)
+		return 0xBFE00000ULL;
+
+	return gd->ram_top;
+}
+
 static void show_psci_version(void)
 {
 	struct arm_smccc_res res;
+
+	if (fdt_node_check_compatible(gd->fdt_blob, 0, "qcom,msm8953") == 0 ||
+	    fdt_node_check_compatible(gd->fdt_blob, 0, "qcom,sdm632") == 0)
+		return;
 
 	arm_smccc_smc(ARM_PSCI_0_2_FN_PSCI_VERSION, 0, 0, 0, 0, 0, 0, 0, &res);
 
@@ -185,6 +199,19 @@ static void qcom_psci_fixup(void *fdt)
 	int offset, ret;
 	struct arm_smccc_res res;
 
+	qcom_ramoops_early_log("[1.1] In qcom_psci_fixup\n");
+
+	if (fdt_node_check_compatible(fdt, 0, "qcom,msm8953") == 0 ||
+	    fdt_node_check_compatible(fdt, 0, "qcom,sdm632") == 0) {
+		qcom_ramoops_early_log("[1.2] Skipping PSCI SMC on msm8953/sdm632\n");
+		offset = fdt_path_offset(fdt, "/psci");
+		if (offset >= 0) {
+			qcom_ramoops_early_log("[1.3] Deleting /psci node\n");
+			fdt_del_node(fdt, offset);
+		}
+		return;
+	}
+
 	arm_smccc_smc(ARM_PSCI_0_2_FN_PSCI_VERSION, 0, 0, 0, 0, 0, 0, 0, &res);
 
 	if ((int)res.a0 != PSCI_RET_NOT_SUPPORTED)
@@ -204,11 +231,120 @@ static void qcom_psci_fixup(void *fdt)
  * or for supporting quirky devices where it's easier to leave the downstream DT in place
  * to improve ABL compatibility. Otherwise, we use the DT provided by ABL.
  */
+void qcom_ramoops_early_log(const char *msg)
+{
+	volatile uint32_t *pram = (volatile uint32_t *)0xBFEC0000ULL;
+	volatile char *raw = (volatile char *)0xBFE80000ULL;
+	volatile char *data = (volatile char *)0xBFEC000CULL;
+	uint32_t offt;
+
+	if (pram[0] != 0x43474244) {
+		pram[0] = 0x43474244; /* 'DBGC' */
+		pram[1] = 0;
+		pram[2] = 0;
+		/* Zero out the buffers so there is no trailing garbage from DRAM */
+		for (uint32_t i = 0; i < 65536; i++) {
+			raw[i] = 0;
+			data[i] = 0;
+		}
+	}
+
+	offt = pram[1];
+	while (*msg) {
+		char c = *msg++;
+		if (offt < 0x3FFF0) {
+			data[offt] = c;
+			raw[offt] = c;
+			offt++;
+		}
+	}
+	pram[1] = offt;
+	pram[2] = offt;
+	data[offt] = '\0';
+	raw[offt] = '\0';
+}
+
+void early_delay_s(uint32_t sec)
+{
+	uint64_t frq, start, target;
+
+	asm volatile("mrs %0, cntfrq_el0" : "=r" (frq));
+	asm volatile("mrs %0, cntpct_el0" : "=r" (start));
+	target = start + (frq * sec);
+	while (1) {
+		uint64_t cur;
+		/* Pet APCS watchdog during delay */
+		*(volatile uint32_t *)0x0b017004ULL = 1;
+		asm volatile("mrs %0, cntpct_el0" : "=r" (cur));
+		if (cur >= target)
+			break;
+	}
+}
+
+static void qcom_disable_watchdog(void)
+{
+	volatile uint32_t *wdt_rst  = (volatile uint32_t *)0x0b017004ULL;
+	volatile uint32_t *wdt_en   = (volatile uint32_t *)0x0b017008ULL;
+	volatile uint32_t *wdt_bark = (volatile uint32_t *)0x0b017010ULL;
+	volatile uint32_t *wdt_bite = (volatile uint32_t *)0x0b017014ULL;
+
+	*wdt_rst = 1;          /* Pet */
+	*wdt_en = 0;           /* Disable enable bit */
+	*wdt_bark = 0x7FFFFFFF;/* Max bark timeout */
+	*wdt_bite = 0x7FFFFFFF;/* Max bite timeout */
+	*wdt_rst = 1;          /* Pet again */
+}
+
+static void draw_early_splash(void)
+{
+	/* Read active MDP5 scanout address from hardware */
+	uint32_t active_fb = *(volatile uint32_t *)0x01A15014ULL;
+	volatile uint32_t *fb;
+	volatile uint32_t *fb2;
+	int y, x;
+
+	/* Fall back to 0x90000000 if not in valid RAM range */
+	if (active_fb < 0x80000000 || active_fb > 0xA0000000)
+		active_fb = 0x90000000;
+
+	fb = (volatile uint32_t *)(uintptr_t)active_fb;
+	fb2 = (volatile uint32_t *)0x90001000ULL;
+
+	for (y = 0; y < 1520; y++) {
+		uint32_t color;
+		if (y < 250)
+			color = 0x00FF0000; /* Red */
+		else if (y < 500)
+			color = 0x0000FF00; /* Green */
+		else if (y < 750)
+			color = 0x000000FF; /* Blue */
+		else if (y < 1000)
+			color = 0x0000FFFF; /* Cyan */
+		else if (y < 1250)
+			color = 0x00FFFF00; /* Yellow */
+		else
+			color = 0x00FF00FF; /* Magenta */
+
+		for (x = 0; x < 720; x++) {
+			fb[y * 720 + x] = color;
+			fb2[y * 720 + x] = color;
+		}
+	}
+}
+
 int board_fdt_blob_setup(void **fdtp)
 {
 	struct fdt_header *external_fdt, *internal_fdt;
 	bool internal_valid, external_valid;
 	int ret = -ENODATA;
+
+	qcom_disable_watchdog();
+	draw_early_splash();
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v15) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("[SPLASH] Painted early test bars on LCD display!\n");
+	qcom_ramoops_early_log("[MAJOR 0] Sleeping 7s to hold splash on screen...\n");
+	early_delay_s(7);
+	qcom_ramoops_early_log("[MAJOR 0] Survived 7s early splash delay!\n");
 
 	internal_fdt = (struct fdt_header *)*fdtp;
 	external_fdt = (struct fdt_header *)get_prev_bl_fdt_addr();
@@ -219,9 +355,11 @@ int board_fdt_blob_setup(void **fdtp)
 	 * There is no point returning an error here, U-Boot can't do anything useful in this situation.
 	 * Bail out while we can still print a useful error message.
 	 */
-	if (!internal_valid && !external_valid)
+	if (!internal_valid && !external_valid) {
+		qcom_ramoops_early_log("FATAL: Neither internal nor external FDT is valid!\n");
 		panic("Internal FDT is invalid and no external FDT was provided! (fdt=%#llx)\n",
 		      (phys_addr_t)external_fdt);
+	}
 
 	/* Prefer memory information from internal DT if it's present */
 	if (internal_valid)
@@ -237,8 +375,12 @@ int board_fdt_blob_setup(void **fdtp)
 		ret = qcom_parse_memory(external_fdt);
 	}
 
-	if (ret < 0)
+	if (ret < 0) {
+		qcom_ramoops_early_log("FATAL: No valid memory ranges found!\n");
 		panic("No valid memory ranges found!\n");
+	}
+
+	qcom_ramoops_early_log("[1] Memory ranges parsed OK\n");
 
 	/* If we have an external FDT, it can only have come from the Android bootloader. */
 	if (external_valid)
@@ -259,6 +401,7 @@ int board_fdt_blob_setup(void **fdtp)
 	}
 
 	qcom_psci_fixup(*fdtp);
+	qcom_ramoops_early_log("[1.4] Exiting board_fdt_blob_setup\n");
 
 	return ret;
 }
@@ -313,8 +456,11 @@ void __weak qcom_board_init(void)
 
 int board_init(void)
 {
+	qcom_disable_watchdog();
+	qcom_ramoops_early_log("[3] Entering board_init\n");
 	show_psci_version();
 	qcom_board_init();
+	qcom_ramoops_early_log("[3.9] Exiting board_init\n");
 	return 0;
 }
 
@@ -585,6 +731,8 @@ static void build_mem_map(void)
 {
 	int i, j;
 
+	qcom_configure_bi_dram();
+
 	/*
 	 * Ensure the peripheral block is sized to correctly cover the address range
 	 * up to the first memory bank.
@@ -599,7 +747,7 @@ static void build_mem_map(void)
 			 PTE_BLOCK_NON_SHARE |
 			 PTE_BLOCK_PXN | PTE_BLOCK_UXN;
 
-	for (i = 1, j = 0; i < ARRAY_SIZE(rbx_mem_map) - 1 && gd->bd->bi_dram[j].size; i++, j++) {
+	for (i = 1, j = 0; i < ARRAY_SIZE(rbx_mem_map) - 2 && gd->bd->bi_dram[j].size; i++, j++) {
 		mem_map[i].phys = gd->bd->bi_dram[j].start;
 		mem_map[i].virt = mem_map[i].phys;
 		mem_map[i].size = gd->bd->bi_dram[j].size;
@@ -607,8 +755,18 @@ static void build_mem_map(void)
 				   PTE_BLOCK_INNER_SHARE;
 	}
 
+	/* Map Ramoops region (0xBFE00000 - 0xC0000000) so early logging works with MMU enabled */
+	mem_map[i].phys = 0xBFE00000ULL;
+	mem_map[i].virt = mem_map[i].phys;
+	mem_map[i].size = 0x00200000ULL; /* 2 MiB */
+	mem_map[i].attrs = PTE_BLOCK_MEMTYPE(MT_NORMAL_NC) | \
+			   PTE_BLOCK_INNER_SHARE;
+	i++;
+
 	mem_map[i].phys = UINT64_MAX;
+	mem_map[i].virt = 0;
 	mem_map[i].size = 0;
+	mem_map[i].attrs = 0;
 
 #ifdef DEBUG
 	debug("Configured memory map:\n");
@@ -673,11 +831,22 @@ static void carve_out_reserved_memory(void)
 			/* Qualcomm devices use #address/size-cells = <2> but all reserved regions are within
 			 * the 32-bit address space. So we can cheat here for speed.
 			 */
-			res[i].start = fdt32_to_cpu(ptr[1]);
-			res[i].end = res[i].start + fdt32_to_cpu(ptr[3]);
+			phys_addr_t r_start = fdt32_to_cpu(ptr[1]);
+			phys_addr_t r_end = r_start + fdt32_to_cpu(ptr[3]);
+
+			/* Skip regions outside mapped memory to prevent infinite loop in mmu_change_region_attr */
+			if (r_start < gd->ram_base || r_start >= gd->ram_top || r_end > gd->ram_top)
+				continue;
+
+			res[i].start = r_start;
+			res[i].end = r_end;
 			i++;
 		}
 	}
+
+	/* If no valid reserved memory regions to carve out, return early */
+	if (i == 0)
+		return;
 
 	/* Sort the reserved memory regions by address */
 	count = i;
@@ -724,14 +893,19 @@ void enable_caches(void)
 	u64 pt_size;
 	ulong carveout_start;
 
+	qcom_ramoops_early_log("[2.0] Entering enable_caches\n");
+
 	gd->arch.tlb_fillptr = tlb_addr;
 
 	build_mem_map();
+	qcom_ramoops_early_log("[2.1] build_mem_map done\n");
 
 	icache_enable();
+	qcom_ramoops_early_log("[2.2] icache_enable done\n");
 
 	/* Create normal system page tables */
 	setup_pgtables();
+	qcom_ramoops_early_log("[2.3] setup_pgtables primary done\n");
 
 	pt_size = (uintptr_t)gd->arch.tlb_fillptr -
 		  (uintptr_t)gd->arch.tlb_addr;
@@ -744,13 +918,32 @@ void enable_caches(void)
 	gd->arch.tlb_emerg = gd->arch.tlb_addr;
 	gd->arch.tlb_addr = tlb_addr;
 	gd->arch.tlb_size = tlb_size;
+	qcom_ramoops_early_log("[2.4] setup_pgtables emerg done\n");
 
 	/* We do the carveouts only for QCS404, for now. */
 	if (fdt_node_check_compatible(gd->fdt_blob, 0, "qcom,qcs404") == 0) {
 		carveout_start = get_timer(0);
-		/* Takes ~20-50ms on SDM845 */
 		carve_out_reserved_memory();
 		debug("carveout time: %lums\n", get_timer(carveout_start));
 	}
-	dcache_enable();
+
+	qcom_ramoops_early_log("[2.5.1] Invalidating TLB\n");
+	__asm_invalidate_tlb_all();
+
+	qcom_ramoops_early_log("[2.5.2] Setting TTBR/TCR/MAIR\n");
+	mmu_setup();
+
+	qcom_ramoops_early_log("[2.5.3] Enabling MMU (CR_M)\n");
+	mmu_enable();
+
+	qcom_ramoops_early_log("[2.5.4] MMU ON! Invalidating dcache\n");
+	invalidate_dcache_all();
+
+	qcom_ramoops_early_log("[2.5.5] Enabling dcache (CR_C)\n");
+	set_sctlr(get_sctlr() | CR_C);
+
+	qcom_ramoops_early_log("[2.6] MMU and dcache enabled successfully!\n");
+	qcom_ramoops_early_log("[SUB 1] Sleeping 3s after MMU & dcache ON...\n");
+	early_delay_s(3);
+	qcom_ramoops_early_log("[SUB 1] Survived 3s post-MMU sleep!\n");
 }

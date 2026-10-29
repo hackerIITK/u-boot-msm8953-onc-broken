@@ -174,11 +174,9 @@ static int msm_serial_probe(struct udevice *dev)
 		return 0;
 
 	rate = msm_uart_clk_init(dev);
-	if (rate < 0)
-		return rate;
-	if (!rate) {
-		log_err("Got core clock rate of 0... Please fix your clock driver\n");
-		return -EINVAL;
+	if (rate <= 0) {
+		/* Fall back to default/configured clock rate if clock driver is unavailable */
+		rate = priv->clk_rate ? priv->clk_rate : 7372800;
 	}
 
 	/* Update the clock rate to the actual programmed rate returned by the

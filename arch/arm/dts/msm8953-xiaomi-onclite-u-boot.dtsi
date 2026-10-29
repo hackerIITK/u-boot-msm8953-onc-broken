@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * U-Boot specific device-tree adjustments for Xiaomi Redmi 7 (onclite)
+ */
+
+/ {
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+};

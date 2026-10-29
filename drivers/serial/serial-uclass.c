@@ -23,6 +23,8 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+extern void qcom_ramoops_early_log(const char *msg);
+
 /*
  * Table with supported baudrates (defined in config_xyz.h)
  */
@@ -96,10 +98,13 @@ static void serial_find_console_or_panic(void)
 				return;
 			}
 		} else {
+			qcom_ramoops_early_log("SERIAL: checking stdout\n");
 			if (!serial_check_stdout(blob, &dev)) {
+				qcom_ramoops_early_log("SERIAL: stdout matched\n");
 				gd->cur_serial_dev = dev;
 				return;
 			}
+			qcom_ramoops_early_log("SERIAL: stdout did not match\n");
 		}
 	}
 	if (!IS_ENABLED(CONFIG_XPL_BUILD) || !CONFIG_IS_ENABLED(OF_CONTROL) ||
@@ -189,8 +194,12 @@ int fetch_baud_from_dtb(void)
 /* Called prior to relocation */
 int serial_init(void)
 {
+	extern void qcom_ramoops_early_log(const char *msg);
+	qcom_ramoops_early_log("SERIAL: start serial_init\n");
 #if CONFIG_IS_ENABLED(SERIAL_PRESENT)
+	qcom_ramoops_early_log("SERIAL: finding console\n");
 	serial_find_console_or_panic();
+	qcom_ramoops_early_log("SERIAL: console find done\n");
 	if (gd->cur_serial_dev)
 		gd->flags |= GD_FLG_SERIAL_READY;
 
@@ -212,8 +221,11 @@ int serial_init(void)
 			sprintf(ptr, "baudrate=%d", gd->baudrate);
 		}
 	}
+	qcom_ramoops_early_log("SERIAL: setting baudrate\n");
 	serial_setbrg();
+	qcom_ramoops_early_log("SERIAL: setbrg done\n");
 #endif
+	qcom_ramoops_early_log("SERIAL: serial_init OK\n");
 
 	return 0;
 }

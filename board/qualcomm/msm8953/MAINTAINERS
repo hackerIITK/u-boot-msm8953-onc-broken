@@ -1,0 +1,10 @@
+MSM8953 BOARDS
+M:	Antigravity <antigravity@google.com>
+S:	Maintained
+F:	board/qualcomm/msm8953/
+F:	board/qualcomm/onclite/
+F:	include/configs/msm8953_onclite.h
+F:	include/configs/onclite_msm8953.h
+F:	configs/msm8953_onclite_defconfig
+F:	dts/upstream/src/arm64/qcom/msm8953-xiaomi-onclite.dts
+F:	arch/arm/dts/msm8953-xiaomi-onclite.dts
