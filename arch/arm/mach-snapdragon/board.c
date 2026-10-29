@@ -297,37 +297,31 @@ static void qcom_disable_watchdog(void)
 
 static void draw_early_splash(void)
 {
-	/* Read active MDP5 scanout address from hardware */
-	uint32_t active_fb = *(volatile uint32_t *)0x01A15014ULL;
-	volatile uint32_t *fb;
-	volatile uint32_t *fb2;
+	/* Continuous splash on onclite is 24bpp RGB888 at 0x90001000 */
+	volatile uint8_t *fb = (volatile uint8_t *)0x90001000ULL;
 	int y, x;
 
-	/* Fall back to 0x90000000 if not in valid RAM range */
-	if (active_fb < 0x80000000 || active_fb > 0xA0000000)
-		active_fb = 0x90000000;
-
-	fb = (volatile uint32_t *)(uintptr_t)active_fb;
-	fb2 = (volatile uint32_t *)0x90001000ULL;
-
 	for (y = 0; y < 1520; y++) {
-		uint32_t color;
-		if (y < 250)
-			color = 0x00FF0000; /* Red */
-		else if (y < 500)
-			color = 0x0000FF00; /* Green */
-		else if (y < 750)
-			color = 0x000000FF; /* Blue */
-		else if (y < 1000)
-			color = 0x0000FFFF; /* Cyan */
-		else if (y < 1250)
-			color = 0x00FFFF00; /* Yellow */
-		else
-			color = 0x00FF00FF; /* Magenta */
+		uint8_t r, g, b;
+		if (y < 250) {
+			r = 0xFF; g = 0x00; b = 0x00; /* Red */
+		} else if (y < 500) {
+			r = 0x00; g = 0xFF; b = 0x00; /* Green */
+		} else if (y < 750) {
+			r = 0x00; g = 0x00; b = 0xFF; /* Blue */
+		} else if (y < 1000) {
+			r = 0x00; g = 0xFF; b = 0xFF; /* Cyan */
+		} else if (y < 1250) {
+			r = 0xFF; g = 0xFF; b = 0x00; /* Yellow */
+		} else {
+			r = 0xFF; g = 0x00; b = 0xFF; /* Magenta */
+		}
 
 		for (x = 0; x < 720; x++) {
-			fb[y * 720 + x] = color;
-			fb2[y * 720 + x] = color;
+			int idx = (y * 720 + x) * 3;
+			fb[idx + 0] = b;
+			fb[idx + 1] = g;
+			fb[idx + 2] = r;
 		}
 	}
 }
@@ -340,11 +334,11 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v15) ===\n[0] In board_fdt_blob_setup\n");
-	qcom_ramoops_early_log("[SPLASH] Painted early test bars on LCD display!\n");
-	qcom_ramoops_early_log("[MAJOR 0] Sleeping 7s to hold splash on screen...\n");
-	early_delay_s(7);
-	qcom_ramoops_early_log("[MAJOR 0] Survived 7s early splash delay!\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v16) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
+	qcom_ramoops_early_log("[MAJOR 0] Sleeping 5s to hold splash on screen...\n");
+	early_delay_s(5);
+	qcom_ramoops_early_log("[MAJOR 0] Survived 5s early splash delay!\n");
 
 	internal_fdt = (struct fdt_header *)*fdtp;
 	external_fdt = (struct fdt_header *)get_prev_bl_fdt_addr();

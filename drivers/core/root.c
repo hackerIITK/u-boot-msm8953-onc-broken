@@ -211,6 +211,12 @@ static int dm_scan_fdt_node(struct udevice *parent, ofnode parent_node,
 			pr_debug("   - ignoring disabled device\n");
 			continue;
 		}
+		if (node_name && !pre_reloc_only) {
+			extern void qcom_ramoops_early_log(const char *msg);
+			qcom_ramoops_early_log("N: ");
+			qcom_ramoops_early_log(node_name);
+			qcom_ramoops_early_log("\n");
+		}
 		err = lists_bind_fdt(parent, node, NULL, NULL, pre_reloc_only);
 		if (err && !ret) {
 			ret = err;

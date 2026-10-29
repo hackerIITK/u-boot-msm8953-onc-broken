@@ -44,12 +44,12 @@
 
 		framebuffer0: framebuffer@90001000 {
 			compatible = "simple-framebuffer";
-			reg = <0 0x90001000 0 (720 * 1520 * 4)>;
+			reg = <0 0x90001000 0 (720 * 1520 * 3)>;
 
 			width = <720>;
 			height = <1520>;
-			stride = <(720 * 4)>;
-			format = "x8r8g8b8";
+			stride = <(720 * 3)>;
+			format = "r8g8b8";
 		};
 	};
 
