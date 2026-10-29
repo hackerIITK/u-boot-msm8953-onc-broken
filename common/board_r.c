@@ -223,6 +223,8 @@ static int initr_malloc(void)
 {
 	ulong start;
 
+	WATCHDOG_RESET();
+	qcom_ramoops_early_log("INIT: initr_malloc start\n");
 #if CONFIG_IS_ENABLED(SYS_MALLOC_F)
 	debug("Pre-reloc malloc() used %#x bytes (%d KB)\n", gd->malloc_ptr,
 	      gd->malloc_ptr / 1024);
@@ -234,7 +236,10 @@ static int initr_malloc(void)
 	 */
 	start = gd->relocaddr - TOTAL_MALLOC_LEN;
 	gd_set_malloc_start(start);
+	WATCHDOG_RESET();
 	mem_malloc_init(start, TOTAL_MALLOC_LEN);
+	WATCHDOG_RESET();
+	qcom_ramoops_early_log("INIT: initr_malloc done\n");
 	return 0;
 }
 

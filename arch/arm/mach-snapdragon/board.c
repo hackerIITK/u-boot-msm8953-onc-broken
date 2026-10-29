@@ -272,12 +272,11 @@ static inline void append_ts_str(volatile char *data, volatile char *raw, uint32
  */
 void qcom_ramoops_early_log(const char *msg)
 {
-	/* Pet APCS watchdog, reprogram Bark/Bite to maximum (18.6 min @ 1.92MHz) and hold disabled */
+	/* Reprogram BARK & BITE, Pet RESET_REG (0x08), and hold CTL_REG (0x04) permanently disabled */
 	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
 	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
-	*(volatile uint32_t *)0x0b017004ULL = 1;
 	*(volatile uint32_t *)0x0b017008ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 0;
+	*(volatile uint32_t *)0x0b017004ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
 
 	volatile uint32_t *pram = (volatile uint32_t *)0xBFEC0000ULL;
@@ -331,12 +330,11 @@ void early_delay_s(uint32_t sec)
 	target = start + (frq * sec);
 	while (1) {
 		uint64_t cur;
-		/* Pet APCS watchdog, reprogram Bark/Bite to maximum and hold disabled */
+		/* Reprogram BARK & BITE, Pet RESET_REG (0x08), and hold CTL_REG (0x04) permanently disabled */
 		*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
 		*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
-		*(volatile uint32_t *)0x0b017004ULL = 1;
 		*(volatile uint32_t *)0x0b017008ULL = 1;
-		*(volatile uint32_t *)0x0b017008ULL = 0;
+		*(volatile uint32_t *)0x0b017004ULL = 0;
 		asm volatile("dsb sy" ::: "memory");
 		asm volatile("mrs %0, cntpct_el0" : "=r" (cur));
 		if (cur >= target)
@@ -346,16 +344,15 @@ void early_delay_s(uint32_t sec)
 
 static void qcom_disable_watchdog(void)
 {
-	/* Disable APCS watchdog enable bit (0x0B017008 is WDT_EN) */
-	*(volatile uint32_t *)0x0b017008ULL = 0;
+	/* Hold CTL_REG (0x04) disabled (NEVER write 1 to 0x04!) */
+	*(volatile uint32_t *)0x0b017004ULL = 0;
+	/* Reset / Pet counter via RESET_REG (0x08) */
+	*(volatile uint32_t *)0x0b017008ULL = 1;
 	/* Set Bark time and Bite time to maximum 31-bit value (0x7FFFFFFF = 1,118 seconds = 18.6 minutes) */
 	*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
 	*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
-	/* Reset / pet watchdog on both 0x04 (Linux WDT_RST) and 0x08 (LK APPS_WDOG_RESET_REG) */
-	*(volatile uint32_t *)0x0b017004ULL = 1;
-	*(volatile uint32_t *)0x0b017008ULL = 1;
-	/* Ensure enable remains 0 */
-	*(volatile uint32_t *)0x0b017008ULL = 0;
+	/* Ensure CTL remains 0 */
+	*(volatile uint32_t *)0x0b017004ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
 }
 
@@ -383,8 +380,8 @@ static void log_boot_timestamp(void)
 	qcom_ramoops_early_log(buf);
 
 	/* Read hardware APCS watchdog registers BEFORE */
-	uint32_t b_rst  = *(volatile uint32_t *)0x0b017004ULL;
-	uint32_t b_en   = *(volatile uint32_t *)0x0b017008ULL;
+	uint32_t b_ctl  = *(volatile uint32_t *)0x0b017004ULL;
+	uint32_t b_rst  = *(volatile uint32_t *)0x0b017008ULL;
 	uint32_t b_sts  = *(volatile uint32_t *)0x0b01700cULL;
 	uint32_t b_bark = *(volatile uint32_t *)0x0b017010ULL;
 	uint32_t b_bite = *(volatile uint32_t *)0x0b017014ULL;
@@ -393,20 +390,20 @@ static void log_boot_timestamp(void)
 	qcom_disable_watchdog();
 
 	/* Read hardware APCS watchdog registers AFTER */
-	uint32_t a_rst  = *(volatile uint32_t *)0x0b017004ULL;
-	uint32_t a_en   = *(volatile uint32_t *)0x0b017008ULL;
+	uint32_t a_ctl  = *(volatile uint32_t *)0x0b017004ULL;
+	uint32_t a_rst  = *(volatile uint32_t *)0x0b017008ULL;
 	uint32_t a_sts  = *(volatile uint32_t *)0x0b01700cULL;
 	uint32_t a_bark = *(volatile uint32_t *)0x0b017010ULL;
 	uint32_t a_bite = *(volatile uint32_t *)0x0b017014ULL;
 
 	snprintf(buf, sizeof(buf),
-		 "[WDT BEFORE] RST(0x04)=0x%08x EN(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
-		 b_rst, b_en, b_sts, b_bark, b_bite);
+		 "[WDT BEFORE] CTL(0x04)=0x%08x RST(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
+		 b_ctl, b_rst, b_sts, b_bark, b_bite);
 	qcom_ramoops_early_log(buf);
 
 	snprintf(buf, sizeof(buf),
-		 "[WDT AFTER]  RST(0x04)=0x%08x EN(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
-		 a_rst, a_en, a_sts, a_bark, a_bite);
+		 "[WDT AFTER]  CTL(0x04)=0x%08x RST(0x08)=0x%08x STS(0x0C)=0x%08x BARK(0x10)=0x%08x BITE(0x14)=0x%08x\n",
+		 a_ctl, a_rst, a_sts, a_bark, a_bite);
 	qcom_ramoops_early_log(buf);
 }
 

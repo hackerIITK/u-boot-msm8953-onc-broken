@@ -80,12 +80,7 @@ static int device_bind_common(struct udevice *parent, const struct driver *drv,
 	dev->driver = drv;
 	dev->uclass = uc;
 
-	if (name) {
-		extern void qcom_ramoops_early_log(const char *msg);
-		qcom_ramoops_early_log("B: ");
-		qcom_ramoops_early_log(name);
-		qcom_ramoops_early_log("\n");
-	}
+
 
 	dev->seq_ = -1;
 	if (CONFIG_IS_ENABLED(DM_SEQ_ALIAS) &&

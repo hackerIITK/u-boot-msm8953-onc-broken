@@ -207,24 +207,18 @@ static int dm_scan_fdt_node(struct udevice *parent, ofnode parent_node,
 	     node = ofnode_next_subnode(node)) {
 		const char *node_name = ofnode_get_name(node);
 
-		/* Reset APCS hardware watchdog, reprogram thresholds and clear enable bit */
+		/* Pet APCS watchdog via 0x08, hold CTL disabled via 0x04, reprogram thresholds */
 		*(volatile uint32_t *)0x0b017010ULL = 0x7FFFFFFF;
 		*(volatile uint32_t *)0x0b017014ULL = 0x7FFFFFFF;
-		*(volatile uint32_t *)0x0b017004ULL = 1;
 		*(volatile uint32_t *)0x0b017008ULL = 1;
-		*(volatile uint32_t *)0x0b017008ULL = 0;
+		*(volatile uint32_t *)0x0b017004ULL = 0;
 		asm volatile("dsb sy" ::: "memory");
 
 		if (!ofnode_is_enabled(node)) {
 			pr_debug("   - ignoring disabled device\n");
 			continue;
 		}
-		if (node_name && !pre_reloc_only) {
-			extern void qcom_ramoops_early_log(const char *msg);
-			qcom_ramoops_early_log("N: ");
-			qcom_ramoops_early_log(node_name);
-			qcom_ramoops_early_log("\n");
-		}
+
 		err = lists_bind_fdt(parent, node, NULL, NULL, pre_reloc_only);
 		if (err && !ret) {
 			ret = err;
