@@ -266,6 +266,121 @@ static inline void append_ts_str(volatile char *data, volatile char *raw, uint32
 	}
 }
 
+/* SPMI PMIC Arbiter V2 Definitions for MSM8953 (PM8953 / PMI8952 / PMI632) */
+#define SPMI_BASE                     0x02000000ULL
+#define SPMI_CORE_BASE                0x0200F000ULL
+#define SPMI_CHNLS_BASE               0x02400000ULL
+#define SPMI_OBSRVR_BASE              0x02C00000ULL
+
+#define SPMI_APID_MAP(n)              (SPMI_CORE_BASE + 0x800 + (4 * (n)))
+#define SPMI_CH_OFFSET(n)             ((n) * 0x8000)
+
+#define SPMI_REG_CMD0                 0x00
+#define SPMI_REG_CONFIG               0x04
+#define SPMI_REG_STATUS               0x08
+#define SPMI_REG_WDATA                0x10
+#define SPMI_REG_RDATA                0x18
+
+#define SPMI_STATUS_DONE              0x01
+
+/* Cached SPMI PON channels for fast petting */
+static int spmi_pon_channels[4];
+static int spmi_pon_channels_count = -1;
+
+static int spmi_write_byte(int channel, uint8_t off, uint8_t val)
+{
+	uint64_t ch_base = SPMI_CHNLS_BASE + SPMI_CH_OFFSET(channel);
+	uint32_t cmd = ((uint32_t)off) << 4; /* EXT_REG_WRITE_LONG bytecnt=0 */
+	int timeout = 10000;
+
+	*(volatile uint32_t *)(ch_base + SPMI_REG_CONFIG) = 0;
+	*(volatile uint32_t *)(ch_base + SPMI_REG_WDATA) = val;
+	*(volatile uint32_t *)(ch_base + SPMI_REG_CMD0) = cmd;
+	asm volatile("dsb sy" ::: "memory");
+
+	while (!(*(volatile uint32_t *)(ch_base + SPMI_REG_STATUS) & SPMI_STATUS_DONE) && --timeout);
+	return (timeout > 0) ? 0 : -1;
+}
+
+static int spmi_read_byte(int channel, uint8_t off)
+{
+	uint64_t obs_base = SPMI_OBSRVR_BASE + SPMI_CH_OFFSET(channel);
+	uint32_t cmd = (1U << 27) | (((uint32_t)off) << 4); /* EXT_REG_READ_LONG bytecnt=0 */
+	int timeout = 10000;
+
+	*(volatile uint32_t *)(obs_base + SPMI_REG_CONFIG) = 0;
+	*(volatile uint32_t *)(obs_base + SPMI_REG_CMD0) = cmd;
+	asm volatile("dsb sy" ::: "memory");
+
+	while (!(*(volatile uint32_t *)(obs_base + SPMI_REG_STATUS) & SPMI_STATUS_DONE) && --timeout);
+	if (timeout <= 0)
+		return -1;
+	return *(volatile uint32_t *)(obs_base + SPMI_REG_RDATA) & 0xFF;
+}
+
+static void spmi_pon_init(void)
+{
+	if (spmi_pon_channels_count >= 0)
+		return;
+
+	spmi_pon_channels_count = 0;
+	for (int i = 0; i < 128; i++) {
+		uint32_t val = *(volatile uint32_t *)SPMI_APID_MAP(i);
+		uint32_t pid = (val >> 8) & 0xFF;
+		/* PON peripheral is PID 0x08 on any PMIC slave (PM8953 = sid 0, PMI = sid 2) */
+		if (pid == 0x08) {
+			if (spmi_pon_channels_count < 4) {
+				spmi_pon_channels[spmi_pon_channels_count++] = i;
+			}
+		}
+	}
+}
+
+void qcom_pmic_watchdog_pet(void)
+{
+	if (spmi_pon_channels_count < 0)
+		spmi_pon_init();
+
+	for (int i = 0; i < spmi_pon_channels_count; i++) {
+		int ch = spmi_pon_channels[i];
+		/* Write 0x80 to PON_PMIC_WD_RESET_PET (0x58) */
+		spmi_write_byte(ch, 0x58, 0x80);
+	}
+}
+
+void qcom_pmic_watchdog_disable(void)
+{
+	spmi_pon_init();
+
+	char buf[128];
+	for (int i = 0; i < spmi_pon_channels_count; i++) {
+		int ch = spmi_pon_channels[i];
+		uint32_t apid = *(volatile uint32_t *)SPMI_APID_MAP(ch);
+		uint32_t sid = (apid >> 16) & 0xF;
+
+		int s1_timer = spmi_read_byte(ch, 0x54);
+		int s2_timer = spmi_read_byte(ch, 0x55);
+		int s2_ctl   = spmi_read_byte(ch, 0x56);
+		int s2_ctl2  = spmi_read_byte(ch, 0x57);
+
+		snprintf(buf, sizeof(buf),
+			 "[PMIC WD CH%d SID%d BEFORE] S1_TMR=0x%02x S2_TMR=0x%02x S2_CTL=0x%02x S2_CTL2=0x%02x\n",
+			 ch, sid, s1_timer, s2_timer, s2_ctl, s2_ctl2);
+		qcom_ramoops_early_log(buf);
+
+		/* Disable PMIC Watchdog: write 0x00 to PMIC_WD_RESET_S2_CTL2 (0x57) */
+		spmi_write_byte(ch, 0x57, 0x00);
+		/* Pet PMIC Watchdog: write 0x80 to PON_PMIC_WD_RESET_PET (0x58) */
+		spmi_write_byte(ch, 0x58, 0x80);
+
+		int after_ctl2 = spmi_read_byte(ch, 0x57);
+		snprintf(buf, sizeof(buf),
+			 "[PMIC WD CH%d SID%d AFTER]  S2_CTL2=0x%02x (Disabled PMIC WDOG)\n",
+			 ch, sid, after_ctl2);
+		qcom_ramoops_early_log(buf);
+	}
+}
+
 /* We support booting U-Boot with an internal DT when running as a first-stage bootloader
  * or for supporting quirky devices where it's easier to leave the downstream DT in place
  * to improve ABL compatibility. Otherwise, we use the DT provided by ABL.
@@ -278,6 +393,7 @@ void qcom_watchdog_pet(void)
 	*(volatile uint32_t *)0x0b017004ULL = 1;
 	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
+	qcom_pmic_watchdog_pet();
 }
 
 void qcom_ramoops_early_log(const char *msg)
@@ -389,6 +505,9 @@ static void qcom_disable_watchdog(void)
 	*(volatile uint32_t *)0x0b017004ULL = 0;
 	*(volatile uint32_t *)0x0b017008ULL = 0;
 	asm volatile("dsb sy" ::: "memory");
+
+	/* 4. SPMI PMIC Watchdog Disarming (500ms S2 Timer) */
+	qcom_pmic_watchdog_disable();
 }
 
 static void log_boot_timestamp(void)
@@ -493,7 +612,7 @@ int board_fdt_blob_setup(void **fdtp)
 
 	qcom_disable_watchdog();
 	draw_early_splash();
-	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v30) ===\n[0] In board_fdt_blob_setup\n");
+	qcom_ramoops_early_log("=== U-BOOT MSM8953 / ONCLITE EARLY BOOT (v31) ===\n[0] In board_fdt_blob_setup\n");
 	log_boot_timestamp();
 	qcom_ramoops_early_log("[SPLASH] Painted early 24bpp RGB888 test bars on LCD display!\n");
 	qcom_ramoops_early_log("[CKPT 0] Splash painted OK\n");
