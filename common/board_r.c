@@ -260,6 +260,8 @@ static int initr_of_live(void)
 }
 
 #ifdef CONFIG_DM
+static bool s_enable_4s_test = false;
+
 static int initr_dm(void)
 {
 	extern void qcom_ramoops_early_log(const char *msg);
@@ -267,7 +269,8 @@ static int initr_dm(void)
 	qcom_ramoops_early_log("[DM 0] oftree_reset\n");
 	oftree_reset();
 
-	qcom_ramoops_early_log("[TEST v37] Bypassing post-reloc dm_init_and_scan to jump directly to console!\n");
+	qcom_ramoops_early_log("[TEST v40] Enabling per-function 4s delay test from initr_dm onwards!\n");
+	s_enable_4s_test = true;
 	return 0;
 }
 #endif
@@ -581,6 +584,17 @@ static int dm_announce(void)
 static int run_main_loop(void)
 {
 	int ret;
+	extern void qcom_ramoops_early_log(const char *msg);
+	extern void early_delay_s(uint32_t sec);
+
+	qcom_ramoops_early_log("[4S-TEST] Entering run_main_loop, starting 4s delay...\n");
+	for (int _t = 1; _t <= 4; _t++) {
+		early_delay_s(1);
+		char _dbuf[64];
+		snprintf(_dbuf, sizeof(_dbuf), "[4S-TEST] run_main_loop tick %d/4s OK\n", _t);
+		qcom_ramoops_early_log(_dbuf);
+	}
+	qcom_ramoops_early_log("[4S-TEST] run_main_loop 4s delay done!\n");
 
 #ifdef CONFIG_SANDBOX
 	sandbox_main_loop_init();
@@ -596,12 +610,55 @@ static int run_main_loop(void)
 	return 0;
 }
 
-/*
- * Over time we hope to remove most of the driver-related init and do it
- * if/when the driver is later used.
- *
- * TODO: perhaps reset the watchdog in the initcall function after each call?
- */
+#undef INITCALL
+#define INITCALL(_call) \
+	do { \
+		extern void qcom_ramoops_early_log(const char *msg); \
+		extern void early_delay_s(uint32_t sec); \
+		char _dbuf[128]; \
+		qcom_ramoops_early_log("INIT: " #_call "\n"); \
+		if (_call()) { \
+			qcom_ramoops_early_log("FAIL: " #_call "\n"); \
+			hang(); \
+		} \
+		if (s_enable_4s_test) { \
+			snprintf(_dbuf, sizeof(_dbuf), "[4S-TEST] %s OK, starting 4s delay...\n", #_call); \
+			qcom_ramoops_early_log(_dbuf); \
+			for (int _t = 1; _t <= 4; _t++) { \
+				early_delay_s(1); \
+				snprintf(_dbuf, sizeof(_dbuf), "[4S-TEST] %s tick %d/4s OK\n", #_call, _t); \
+				qcom_ramoops_early_log(_dbuf); \
+			} \
+			snprintf(_dbuf, sizeof(_dbuf), "[4S-TEST] %s 4s delay done!\n", #_call); \
+			qcom_ramoops_early_log(_dbuf); \
+		} \
+	} while (0)
+
+#undef INITCALL_EVT
+#define INITCALL_EVT(_evt) \
+	do { \
+		extern void qcom_ramoops_early_log(const char *msg); \
+		extern void early_delay_s(uint32_t sec); \
+		char _dbuf[128]; \
+		snprintf(_dbuf, sizeof(_dbuf), "INIT_EVT: %s\n", event_type_name(_evt)); \
+		qcom_ramoops_early_log(_dbuf); \
+		if (event_notify_null(_evt)) { \
+			printf("%s(): event %d/%s failed\n", __func__, _evt, \
+			       event_type_name(_evt)) ; \
+			hang(); \
+		} \
+		if (s_enable_4s_test) { \
+			snprintf(_dbuf, sizeof(_dbuf), "[4S-TEST] EVT %s OK, starting 4s delay...\n", event_type_name(_evt)); \
+			qcom_ramoops_early_log(_dbuf); \
+			for (int _t = 1; _t <= 4; _t++) { \
+				early_delay_s(1); \
+				snprintf(_dbuf, sizeof(_dbuf), "[4S-TEST] EVT %s tick %d/4s OK\n", event_type_name(_evt), _t); \
+				qcom_ramoops_early_log(_dbuf); \
+			} \
+			snprintf(_dbuf, sizeof(_dbuf), "[4S-TEST] EVT %s 4s delay done!\n", event_type_name(_evt)); \
+			qcom_ramoops_early_log(_dbuf); \
+		} \
+	} while (0)
 
 static void initcall_run_r(void)
 {
@@ -677,18 +734,6 @@ static void initcall_run_r(void)
 	qcom_ramoops_early_log("[SUB 6] serial_initialize done\n");
 	qcom_ramoops_early_log("[CKPT 6] serial_initialize OK\n");
 	INITCALL(initr_announce);
-
-	/* 4-second delay test requested by user to rule out anomalies at dm_announce */
-	extern void early_delay_s(uint32_t sec);
-	qcom_ramoops_early_log("[TEST] >>> STARTING 4-SECOND DELAY TEST AT DM_ANNOUNCE <<<\n");
-	for (int i = 1; i <= 4; i++) {
-		early_delay_s(1);
-		char delay_buf[64];
-		snprintf(delay_buf, sizeof(delay_buf), "[TEST] Delay tick %d/4s elapsed successfully!\n", i);
-		qcom_ramoops_early_log(delay_buf);
-	}
-	qcom_ramoops_early_log("[TEST] >>> 4-SECOND DELAY COMPLETED! Now calling dm_announce <<<\n");
-
 	INITCALL(dm_announce);
 	qcom_ramoops_early_log("[CKPT 7] dm_announce OK\n");
 #if CONFIG_IS_ENABLED(WDT)

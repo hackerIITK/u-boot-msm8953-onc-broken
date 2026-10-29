@@ -47,13 +47,28 @@ void main_loop(void)
 	bootstage_mark_name(BOOTSTAGE_ID_MAIN_LOOP, "main_loop");
 
 	extern void qcom_ramoops_early_log(const char *msg);
+	extern void early_delay_s(uint32_t sec);
+	char _dbuf[64];
+
 	qcom_ramoops_early_log("[SHELL 100] In main_loop()! U-BOOT FULLY BOOTED!\n");
+	for (int _t = 1; _t <= 4; _t++) {
+		early_delay_s(1);
+		snprintf(_dbuf, sizeof(_dbuf), "[4S-TEST] main_loop tick %d/4s OK\n", _t);
+		qcom_ramoops_early_log(_dbuf);
+	}
+	qcom_ramoops_early_log("[4S-TEST] main_loop 4s delay done! Calling cli_init\n");
 
 	if (IS_ENABLED(CONFIG_VERSION_VARIABLE))
 		env_set("ver", version_string);  /* set version variable */
 
 	cli_init();
 	qcom_ramoops_early_log("[SHELL 101] cli_init done!\n");
+	for (int _t = 1; _t <= 4; _t++) {
+		early_delay_s(1);
+		snprintf(_dbuf, sizeof(_dbuf), "[4S-TEST] cli_init tick %d/4s OK\n", _t);
+		qcom_ramoops_early_log(_dbuf);
+	}
+	qcom_ramoops_early_log("[4S-TEST] cli_init 4s delay done!\n");
 
 	if (IS_ENABLED(CONFIG_USE_PREBOOT))
 		run_preboot_environment_command();
