@@ -1,0 +1,6 @@
+* -text
+*.md text
+*.py text
+*.dts text
+.gitignore text
+.gitattributes text
